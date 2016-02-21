@@ -1,0 +1,109 @@
+<%= form_for(@proposal) do |f| %>
+  <% if @proposal.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@proposal.errors.count, "error") %> prohibited this proposal from being saved:</h2>
+
+      <ul>
+      <% @proposal.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :person_id %><br>
+    <%= f.text_field :person_id %>
+  </div>
+  <div class="field">
+    <%= f.label :current_insurer_id %><br>
+    <%= f.number_field :current_insurer_id %>
+  </div>
+  <div class="field">
+    <%= f.label :susep_id %><br>
+    <%= f.text_field :susep_id %>
+  </div>
+  <div class="field">
+    <%= f.label :branch_id %><br>
+    <%= f.text_field :branch_id %>
+  </div>
+  <div class="field">
+    <%= f.label :start_validity %><br>
+    <%= f.date_select :start_validity %>
+  </div>
+  <div class="field">
+    <%= f.label :end_validity %><br>
+    <%= f.date_select :end_validity %>
+  </div>
+  <div class="field">
+    <%= f.label :issue_date %><br>
+    <%= f.date_select :issue_date %>
+  </div>
+  <div class="field">
+    <%= f.label :operation_id %><br>
+    <%= f.text_field :operation_id %>
+  </div>
+  <div class="field">
+    <%= f.label :proposal_number %><br>
+    <%= f.text_field :proposal_number %>
+  </div>
+  <div class="field">
+    <%= f.label :insurance_policy %><br>
+    <%= f.text_field :insurance_policy %>
+  </div>
+  <div class="field">
+    <%= f.label :endorsement_number %><br>
+    <%= f.text_field :endorsement_number %>
+  </div>
+  <div class="field">
+    <%= f.label :previous_insurer_id %><br>
+    <%= f.number_field :previous_insurer_id %>
+  </div>
+  <div class="field">
+    <%= f.label :previous_insurance_policy %><br>
+    <%= f.text_field :previous_insurance_policy %>
+  </div>
+  <div class="field">
+    <%= f.label :previous_endorsement_number %><br>
+    <%= f.text_field :previous_endorsement_number %>
+  </div>
+  <div class="field">
+    <%= f.label :policy_cost %><br>
+    <%= f.text_field :policy_cost %>
+  </div>
+  <div class="field">
+    <%= f.label :iof %><br>
+    <%= f.text_field :iof %>
+  </div>
+  <div class="field">
+    <%= f.label :additional_fractionation %><br>
+    <%= f.text_field :additional_fractionation %>
+  </div>
+  <div class="field">
+    <%= f.label :expenses %><br>
+    <%= f.text_field :expenses %>
+  </div>
+  <div class="field">
+    <%= f.label :discount_technical_type_id %><br>
+    <%= f.text_field :discount_technical_type_id %>
+  </div>
+  <div class="field">
+    <%= f.label :discount_technical %><br>
+    <%= f.text_field :discount_technical %>
+  </div>
+  <div class="field">
+    <%= f.label :discount_broker %><br>
+    <%= f.text_field :discount_broker %>
+  </div>
+  <div class="field">
+    <%= f.label :installment_number %><br>
+    <%= f.number_field :installment_number %>
+  </div>
+  <div class="field">
+    <%= f.label :payment_type_id %><br>
+    <%= f.text_field :payment_type_id %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

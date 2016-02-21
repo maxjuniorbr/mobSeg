@@ -1,0 +1,51 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  person_id: 
+  current_insurer_id: 1
+  susep_id: 
+  branch_id: 
+  start_validity: 2016-02-21
+  end_validity: 2016-02-21
+  issue_date: 2016-02-21
+  operation_id: 
+  proposal_number: MyString
+  insurance_policy: MyString
+  endorsement_number: MyString
+  previous_insurer_id: 1
+  previous_insurance_policy: MyString
+  previous_endorsement_number: MyString
+  policy_cost: 9.99
+  iof: 9.99
+  additional_fractionation: 9.99
+  expenses: 9.99
+  discount_technical_type_id: 
+  discount_technical: 9.99
+  discount_broker: 9.99
+  installment_number: 1
+  payment_type_id: 
+
+two:
+  person_id: 
+  current_insurer_id: 1
+  susep_id: 
+  branch_id: 
+  start_validity: 2016-02-21
+  end_validity: 2016-02-21
+  issue_date: 2016-02-21
+  operation_id: 
+  proposal_number: MyString
+  insurance_policy: MyString
+  endorsement_number: MyString
+  previous_insurer_id: 1
+  previous_insurance_policy: MyString
+  previous_endorsement_number: MyString
+  policy_cost: 9.99
+  iof: 9.99
+  additional_fractionation: 9.99
+  expenses: 9.99
+  discount_technical_type_id: 
+  discount_technical: 9.99
+  discount_broker: 9.99
+  installment_number: 1
+  payment_type_id: 

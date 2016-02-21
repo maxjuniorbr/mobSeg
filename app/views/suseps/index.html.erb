@@ -1,0 +1,31 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Suseps</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Insurer</th>
+      <th>Person</th>
+      <th>Value</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @suseps.each do |susep| %>
+      <tr>
+        <td><%= susep.insurer %></td>
+        <td><%= susep.person %></td>
+        <td><%= susep.value %></td>
+        <td><%= link_to 'Show', susep %></td>
+        <td><%= link_to 'Edit', edit_susep_path(susep) %></td>
+        <td><%= link_to 'Destroy', susep, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Susep', new_susep_path %>

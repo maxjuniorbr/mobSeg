@@ -1,0 +1,119 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Person:</strong>
+  <%= @proposal.person %>
+</p>
+
+<p>
+  <strong>Current insurer:</strong>
+  <%= @proposal.current_insurer_id %>
+</p>
+
+<p>
+  <strong>Susep:</strong>
+  <%= @proposal.susep %>
+</p>
+
+<p>
+  <strong>Branch:</strong>
+  <%= @proposal.branch %>
+</p>
+
+<p>
+  <strong>Start validity:</strong>
+  <%= @proposal.start_validity %>
+</p>
+
+<p>
+  <strong>End validity:</strong>
+  <%= @proposal.end_validity %>
+</p>
+
+<p>
+  <strong>Issue date:</strong>
+  <%= @proposal.issue_date %>
+</p>
+
+<p>
+  <strong>Operation:</strong>
+  <%= @proposal.operation %>
+</p>
+
+<p>
+  <strong>Proposal number:</strong>
+  <%= @proposal.proposal_number %>
+</p>
+
+<p>
+  <strong>Insurance policy:</strong>
+  <%= @proposal.insurance_policy %>
+</p>
+
+<p>
+  <strong>Endorsement number:</strong>
+  <%= @proposal.endorsement_number %>
+</p>
+
+<p>
+  <strong>Previous insurer:</strong>
+  <%= @proposal.previous_insurer_id %>
+</p>
+
+<p>
+  <strong>Previous insurance policy:</strong>
+  <%= @proposal.previous_insurance_policy %>
+</p>
+
+<p>
+  <strong>Previous endorsement number:</strong>
+  <%= @proposal.previous_endorsement_number %>
+</p>
+
+<p>
+  <strong>Policy cost:</strong>
+  <%= @proposal.policy_cost %>
+</p>
+
+<p>
+  <strong>Iof:</strong>
+  <%= @proposal.iof %>
+</p>
+
+<p>
+  <strong>Additional fractionation:</strong>
+  <%= @proposal.additional_fractionation %>
+</p>
+
+<p>
+  <strong>Expenses:</strong>
+  <%= @proposal.expenses %>
+</p>
+
+<p>
+  <strong>Discount technical type:</strong>
+  <%= @proposal.discount_technical_type %>
+</p>
+
+<p>
+  <strong>Discount technical:</strong>
+  <%= @proposal.discount_technical %>
+</p>
+
+<p>
+  <strong>Discount broker:</strong>
+  <%= @proposal.discount_broker %>
+</p>
+
+<p>
+  <strong>Installment number:</strong>
+  <%= @proposal.installment_number %>
+</p>
+
+<p>
+  <strong>Payment type:</strong>
+  <%= @proposal.payment_type %>
+</p>
+
+<%= link_to 'Edit', edit_proposal_path(@proposal) %> |
+<%= link_to 'Back', proposals_path %>

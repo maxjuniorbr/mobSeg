@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  value: MyString
+  document_type_id: 
+  dispatcher_entity: MyString
+  dispatcher_date: 2016-02-21
+
+two:
+  value: MyString
+  document_type_id: 
+  dispatcher_entity: MyString
+  dispatcher_date: 2016-02-21

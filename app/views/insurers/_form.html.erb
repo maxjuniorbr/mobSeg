@@ -1,0 +1,29 @@
+<%= form_for(@insurer) do |f| %>
+  <% if @insurer.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@insurer.errors.count, "error") %> prohibited this insurer from being saved:</h2>
+
+      <ul>
+      <% @insurer.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name %><br>
+    <%= f.text_field :name %>
+  </div>
+  <div class="field">
+    <%= f.label :branch_office %><br>
+    <%= f.text_field :branch_office %>
+  </div>
+  <div class="field">
+    <%= f.label :standard_commission %><br>
+    <%= f.text_field :standard_commission %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

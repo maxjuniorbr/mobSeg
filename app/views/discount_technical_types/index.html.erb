@@ -1,0 +1,27 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Discount Technical Types</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @discount_technical_types.each do |discount_technical_type| %>
+      <tr>
+        <td><%= discount_technical_type.value %></td>
+        <td><%= link_to 'Show', discount_technical_type %></td>
+        <td><%= link_to 'Edit', edit_discount_technical_type_path(discount_technical_type) %></td>
+        <td><%= link_to 'Destroy', discount_technical_type, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Discount technical type', new_discount_technical_type_path %>

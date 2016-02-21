@@ -1,0 +1,33 @@
+<%= form_for(@document) do |f| %>
+  <% if @document.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@document.errors.count, "error") %> prohibited this document from being saved:</h2>
+
+      <ul>
+      <% @document.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :value %><br>
+    <%= f.text_field :value %>
+  </div>
+  <div class="field">
+    <%= f.label :document_type_id %><br>
+    <%= f.text_field :document_type_id %>
+  </div>
+  <div class="field">
+    <%= f.label :dispatcher_entity %><br>
+    <%= f.text_field :dispatcher_entity %>
+  </div>
+  <div class="field">
+    <%= f.label :dispatcher_date %><br>
+    <%= f.date_select :dispatcher_date %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

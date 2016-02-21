@@ -1,0 +1,64 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @person.name %>
+</p>
+
+<p>
+  <strong>Person type:</strong>
+  <%= @person.person_type %>
+</p>
+
+<p>
+  <strong>Accept email:</strong>
+  <%= @person.accept_email %>
+</p>
+
+<p>
+  <strong>Metier:</strong>
+  <%= @person.metier %>
+</p>
+
+<p>
+  <strong>Contact:</strong>
+  <%= @person.contact %>
+</p>
+
+<p>
+  <strong>Birth:</strong>
+  <%= @person.birth %>
+</p>
+
+<p>
+  <strong>Marital status:</strong>
+  <%= @person.marital_status %>
+</p>
+
+<p>
+  <strong>Gender:</strong>
+  <%= @person.gender %>
+</p>
+
+<p>
+  <strong>Politically exposed person:</strong>
+  <%= @person.politically_exposed_person %>
+</p>
+
+<p>
+  <strong>Exposed name:</strong>
+  <%= @person.exposed_name %>
+</p>
+
+<p>
+  <strong>Occupation:</strong>
+  <%= @person.occupation %>
+</p>
+
+<p>
+  <strong>Salary range:</strong>
+  <%= @person.salary_range %>
+</p>
+
+<%= link_to 'Edit', edit_person_path(@person) %> |
+<%= link_to 'Back', people_path %>

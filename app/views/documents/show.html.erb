@@ -1,0 +1,24 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Value:</strong>
+  <%= @document.value %>
+</p>
+
+<p>
+  <strong>Document type:</strong>
+  <%= @document.document_type %>
+</p>
+
+<p>
+  <strong>Dispatcher entity:</strong>
+  <%= @document.dispatcher_entity %>
+</p>
+
+<p>
+  <strong>Dispatcher date:</strong>
+  <%= @document.dispatcher_date %>
+</p>
+
+<%= link_to 'Edit', edit_document_path(@document) %> |
+<%= link_to 'Back', documents_path %>

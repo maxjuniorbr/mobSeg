@@ -1,0 +1,27 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Mailing Addresses</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @mailing_addresses.each do |mailing_address| %>
+      <tr>
+        <td><%= mailing_address.value %></td>
+        <td><%= link_to 'Show', mailing_address %></td>
+        <td><%= link_to 'Edit', edit_mailing_address_path(mailing_address) %></td>
+        <td><%= link_to 'Destroy', mailing_address, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Mailing address', new_mailing_address_path %>

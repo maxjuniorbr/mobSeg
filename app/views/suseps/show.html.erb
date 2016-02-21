@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Insurer:</strong>
+  <%= @susep.insurer %>
+</p>
+
+<p>
+  <strong>Person:</strong>
+  <%= @susep.person %>
+</p>
+
+<p>
+  <strong>Value:</strong>
+  <%= @susep.value %>
+</p>
+
+<%= link_to 'Edit', edit_susep_path(@susep) %> |
+<%= link_to 'Back', suseps_path %>
