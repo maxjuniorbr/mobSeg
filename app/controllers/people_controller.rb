@@ -62,13 +62,19 @@ class PeopleController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_person
-      @person = Person.find(params[:id])
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_person
+    @person = Person.find(params[:id])
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def person_params
-      params.require(:person).permit(:name, :person_type_id, :accept_email, :metier_id, :contact, :birth, :marital_status_id, :gender_id, :politically_exposed_person, :exposed_name, :occupation_id, :salary_range_id)
-    end
+    # Esta pesquisa foi customizada para retornar o paciente indicador
+    #@patient = Patient.edit_with_indication_name(params[:id])
+    #@indication_patient_name = @patient.indication_patient_name
+    #@addresses = Address.where(patient_id: params[:id])
+    #@phones = Phone.where(patient_id: params[:id])
+  end
+
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def person_params
+    params.require(:person).permit(:name, :person_type_id, :accept_email, :metier_id, :contact, :birth, :marital_status_id, :gender_id, :politically_exposed_person, :exposed_name, :occupation_id, :salary_range_id)
+  end
 end

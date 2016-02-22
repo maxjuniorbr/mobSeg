@@ -18,6 +18,7 @@ pt-BR:
   back: Voltar
   edit: Alterar
   destroy: Apagar
+  cod: Código
   # Models
   activerecord:
     models:
