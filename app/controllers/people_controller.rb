@@ -24,7 +24,23 @@ class PeopleController < ApplicationController
   # POST /people
   # POST /people.json
   def create
-    @person = Person.new(person_params)
+    @person = Person.new(person_params)    
+
+    # Clean wrong input values
+    if @person.person_type_id == 1
+      @person.metier_id = nil
+      @person.contact = nil
+    end
+
+    if @person.person_type_id == 2
+      @person.birth = nil
+      @person.marital_status_id = nil
+      @person.gender_id = nil
+      @person.politically_exposed_person = nil
+      @person.exposed_name = nil
+      @person.occupation_id = nil
+      @person.salary_range_id = nil
+    end
 
     respond_to do |format|
       if @person.save
@@ -40,6 +56,23 @@ class PeopleController < ApplicationController
   # PATCH/PUT /people/1
   # PATCH/PUT /people/1.json
   def update
+
+    # Clean wrong input values
+    if @person.person_type_id == 1
+      @person.metier_id = nil
+      @person.contact = nil
+    end
+
+    if @person.person_type_id == 2
+      @person.birth = nil
+      @person.marital_status_id = nil
+      @person.gender_id = nil
+      @person.politically_exposed_person = nil
+      @person.exposed_name = nil
+      @person.occupation_id = nil
+      @person.salary_range_id = nil
+    end
+
     respond_to do |format|
       if @person.update(person_params)
         format.html { redirect_to @person, notice: 'Person was successfully updated.' }

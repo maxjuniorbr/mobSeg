@@ -21,31 +21,31 @@
   <div class="col-lg-9">
     <div class="form-group">
       <%= f.label :metier_id %>
-      <%= text_field_tag :metier_value, @person.metier.nil? ? '' : @person.metier.value, data: {autocomplete_source: metier_values_path}, class: "form-control" %>
+      <%= text_field_tag :metier_value, @person.metier.nil? ? '' : @person.metier.value, data: {autocomplete_source: metier_values_path}, class: "form-control", disabled: true %>
     </div>
   </div>
   <div class="col-lg-2">
     <div class="form-group">
       <%= f.label :contact %>
-      <%= f.text_field :contact, { class: 'form-control', maxlength: 150 } %>
+      <%= f.text_field :contact, { class: 'form-control', maxlength: 150, disabled: true } %>
     </div>
   </div>
   <div class="col-lg-4">
     <div class="form-group">
       <%= f.label :birth %>
-      <%= f.text_field :birth, value: date_format(@person.try(:birth)), class: "form-control", alt: :date %>
+      <%= f.text_field :birth, value: date_format(@person.try(:birth)), class: "form-control", alt: :date, disabled: true %>
     </div>
   </div>
   <div class="col-lg-4">
     <div class="form-group">
       <%= f.label :marital_status_id %>
-      <%= f.collection_select :marital_status_id, MaritalStatus.all, :id, :value, { include_blank: true }, class: "form-control" %>
+      <%= f.collection_select :marital_status_id, MaritalStatus.all, :id, :value, { include_blank: true }, class: "form-control", disabled: true %>
     </div>
   </div>
   <div class="col-lg-4">
     <div class="form-group">
       <%= f.label :gender_id %>
-      <%= f.collection_select :gender_id, Gender.order('value').all, :id, :value, { include_blank: true }, class: "form-control" %>
+      <%= f.collection_select :gender_id, Gender.order('value').all, :id, :value, { include_blank: true }, class: "form-control", disabled: true %>
     </div>
   </div>
   <div class="col-lg-3">
@@ -53,7 +53,7 @@
       <%= f.label :politically_exposed_person %>
       <div class="input-group">
         <span class="input-group-addon">
-          <%= f.check_box :politically_exposed_person %>
+          <%= f.check_box :politically_exposed_person, disabled: true %>
         </span>
         <%= f.text_field :politically_exposed_person, value: t(:politically_exposed_person), class: 'form-control', disabled: true %>
       </div>
@@ -62,19 +62,19 @@
   <div class="col-lg-9">
     <div class="form-group">
       <%= f.label :exposed_name %>
-      <%= f.text_field :exposed_name, { class: 'form-control', maxlength: 150 } %>
+      <%= f.text_field :exposed_name, { class: 'form-control', maxlength: 150, disabled: true } %>
     </div>
   </div>
   <div class="col-lg-6">
     <div class="form-group">
       <%= f.label :occupation_id %>
-      <%= f.collection_select :occupation_id, Occupation.order('value').all, :id, :value, { include_blank: true }, class: "form-control" %>
+      <%= f.collection_select :occupation_id, Occupation.order('value').all, :id, :value, { include_blank: true }, class: "form-control", disabled: true %>
     </div>
   </div>
   <div class="col-lg-6">
     <div class="form-group">
       <%= f.label :salary_range_id %>
-      <%= f.collection_select :salary_range_id, SalaryRange.all, :id, :value, { include_blank: true }, class: "form-control" %>
+      <%= f.collection_select :salary_range_id, SalaryRange.all, :id, :value, { include_blank: true }, class: "form-control", disabled: true %>
     </div>
   </div>
 </div>
