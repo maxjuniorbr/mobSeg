@@ -28,3 +28,9 @@ $.mask.masks = $.extend($.mask.masks, {
         mask: '(99) 99999-9999'
     }
 });
+
+/* 
+    Customized Tree menu. 
+    Logic : Iterate over all the treeview except the clicked element and remove the active class,  change the fa-angle-down classs to fa-angle-left, and then slideup.
+    If it is the clicked element, then add class active, change icons from down to left and slideDown().
+*/
