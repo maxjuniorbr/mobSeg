@@ -1199,3 +1199,6 @@ DocumentType.create(value: 'CNH')
 DocumentType.create(value: 'CNPJ')
 DocumentType.create(value: 'RG')
 DocumentType.create(value: 'RNE')
+
+Productive.create(name: 'Paulo César Dianin', short_name: 'Paulo', gender_id: 1, cpf: '43646107987', email: 'paulo@bdseguros.com.br', birth: '19/10/1962', status: true)
+Productive.create(name: 'Paulo César Dianin Junior', short_name: 'Junior', gender_id: 1, cpf: '04039552970', email: 'maxjuniorbr@gmail.com', birth: '08/06/1982', status: true)

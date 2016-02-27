@@ -12,16 +12,17 @@
 //
 //= require jquery
 //= require jquery-ui
+//= require bootstrap-sprockets
 //= require jquery_ujs
 //= require turbolinks
 //= require meiomask
-//= require bootstrap-sprockets
 //= require_tree .
 
 $(document).on('ready page:load', function(event) {
-    return $("input[type=\"text\"]").setMask();
+    $("input[type=\"text\"]").setMask();
 });
 
+// Máscara para celular com 9 dígitos
 $.mask.masks = $.extend($.mask.masks, {
     'cell-phone': {
         mask: '(99) 99999-9999'

@@ -4,7 +4,7 @@ class PeopleController < ApplicationController
   # GET /people
   # GET /people.json
   def index
-    @people = Person.all
+    @people = Person.all.order(:id)
   end
 
   # GET /people/1
@@ -44,11 +44,9 @@ class PeopleController < ApplicationController
 
     respond_to do |format|
       if @person.save
-        format.html { redirect_to edit_person_path(@person), notice:  'Person was successfully created.' }
-        format.json { render :show, status: :created, location: @person }
+        format.html { redirect_to people_path, notice:  'Person was successfully created.' }
       else
         format.html { render :new }
-        format.json { render json: @person.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -75,11 +73,9 @@ class PeopleController < ApplicationController
 
     respond_to do |format|
       if @person.update(person_params)
-        format.html { redirect_to @person, notice: 'Person was successfully updated.' }
-        format.json { render :show, status: :ok, location: @person }
+        format.html { redirect_to people_path, notice: 'Person was successfully updated.' }
       else
         format.html { render :edit }
-        format.json { render json: @person.errors, status: :unprocessable_entity }
       end
     end
   end

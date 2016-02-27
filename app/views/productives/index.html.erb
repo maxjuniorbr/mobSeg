@@ -1,0 +1,39 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Productives</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Short name</th>
+      <th>Gender</th>
+      <th>Cpf</th>
+      <th>Email</th>
+      <th>Birth</th>
+      <th>Status</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @productives.each do |productive| %>
+      <tr>
+        <td><%= productive.name %></td>
+        <td><%= productive.short_name %></td>
+        <td><%= productive.gender %></td>
+        <td><%= productive.cpf %></td>
+        <td><%= productive.email %></td>
+        <td><%= productive.birth %></td>
+        <td><%= productive.status %></td>
+        <td><%= link_to 'Show', productive %></td>
+        <td><%= link_to 'Edit', edit_productive_path(productive) %></td>
+        <td><%= link_to 'Destroy', productive, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Productive', new_productive_path %>

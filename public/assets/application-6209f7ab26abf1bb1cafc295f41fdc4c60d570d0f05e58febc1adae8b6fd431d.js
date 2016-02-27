@@ -28308,1320 +28308,6 @@ return $.widget( "ui.tooltip", {
 
 
 
-(function($, undefined) {
-
-/**
- * Unobtrusive scripting adapter for jQuery
- * https://github.com/rails/jquery-ujs
- *
- * Requires jQuery 1.8.0 or later.
- *
- * Released under the MIT license
- *
- */
-
-  // Cut down on the number of issues from people inadvertently including jquery_ujs twice
-  // by detecting and raising an error when it happens.
-  'use strict';
-
-  if ( $.rails !== undefined ) {
-    $.error('jquery-ujs has already been loaded!');
-  }
-
-  // Shorthand to make it a little easier to call public rails functions from within rails.js
-  var rails;
-  var $document = $(document);
-
-  $.rails = rails = {
-    // Link elements bound by jquery-ujs
-    linkClickSelector: 'a[data-confirm], a[data-method], a[data-remote]:not([disabled]), a[data-disable-with], a[data-disable]',
-
-    // Button elements bound by jquery-ujs
-    buttonClickSelector: 'button[data-remote]:not([form]):not(form button), button[data-confirm]:not([form]):not(form button)',
-
-    // Select elements bound by jquery-ujs
-    inputChangeSelector: 'select[data-remote], input[data-remote], textarea[data-remote]',
-
-    // Form elements bound by jquery-ujs
-    formSubmitSelector: 'form',
-
-    // Form input elements bound by jquery-ujs
-    formInputClickSelector: 'form input[type=submit], form input[type=image], form button[type=submit], form button:not([type]), input[type=submit][form], input[type=image][form], button[type=submit][form], button[form]:not([type])',
-
-    // Form input elements disabled during form submission
-    disableSelector: 'input[data-disable-with]:enabled, button[data-disable-with]:enabled, textarea[data-disable-with]:enabled, input[data-disable]:enabled, button[data-disable]:enabled, textarea[data-disable]:enabled',
-
-    // Form input elements re-enabled after form submission
-    enableSelector: 'input[data-disable-with]:disabled, button[data-disable-with]:disabled, textarea[data-disable-with]:disabled, input[data-disable]:disabled, button[data-disable]:disabled, textarea[data-disable]:disabled',
-
-    // Form required input elements
-    requiredInputSelector: 'input[name][required]:not([disabled]), textarea[name][required]:not([disabled])',
-
-    // Form file input elements
-    fileInputSelector: 'input[type=file]:not([disabled])',
-
-    // Link onClick disable selector with possible reenable after remote submission
-    linkDisableSelector: 'a[data-disable-with], a[data-disable]',
-
-    // Button onClick disable selector with possible reenable after remote submission
-    buttonDisableSelector: 'button[data-remote][data-disable-with], button[data-remote][data-disable]',
-
-    // Up-to-date Cross-Site Request Forgery token
-    csrfToken: function() {
-     return $('meta[name=csrf-token]').attr('content');
-    },
-
-    // URL param that must contain the CSRF token
-    csrfParam: function() {
-     return $('meta[name=csrf-param]').attr('content');
-    },
-
-    // Make sure that every Ajax request sends the CSRF token
-    CSRFProtection: function(xhr) {
-      var token = rails.csrfToken();
-      if (token) xhr.setRequestHeader('X-CSRF-Token', token);
-    },
-
-    // Make sure that all forms have actual up-to-date tokens (cached forms contain old ones)
-    refreshCSRFTokens: function(){
-      $('form input[name="' + rails.csrfParam() + '"]').val(rails.csrfToken());
-    },
-
-    // Triggers an event on an element and returns false if the event result is false
-    fire: function(obj, name, data) {
-      var event = $.Event(name);
-      obj.trigger(event, data);
-      return event.result !== false;
-    },
-
-    // Default confirm dialog, may be overridden with custom confirm dialog in $.rails.confirm
-    confirm: function(message) {
-      return confirm(message);
-    },
-
-    // Default ajax function, may be overridden with custom function in $.rails.ajax
-    ajax: function(options) {
-      return $.ajax(options);
-    },
-
-    // Default way to get an element's href. May be overridden at $.rails.href.
-    href: function(element) {
-      return element[0].href;
-    },
-
-    // Checks "data-remote" if true to handle the request through a XHR request.
-    isRemote: function(element) {
-      return element.data('remote') !== undefined && element.data('remote') !== false;
-    },
-
-    // Submits "remote" forms and links with ajax
-    handleRemote: function(element) {
-      var method, url, data, withCredentials, dataType, options;
-
-      if (rails.fire(element, 'ajax:before')) {
-        withCredentials = element.data('with-credentials') || null;
-        dataType = element.data('type') || ($.ajaxSettings && $.ajaxSettings.dataType);
-
-        if (element.is('form')) {
-          method = element.data('ujs:submit-button-formmethod') || element.attr('method');
-          url = element.data('ujs:submit-button-formaction') || element.attr('action');
-          data = $(element[0].elements).serializeArray();
-          // memoized value from clicked submit button
-          var button = element.data('ujs:submit-button');
-          if (button) {
-            data.push(button);
-            element.data('ujs:submit-button', null);
-          }
-          element.data('ujs:submit-button-formmethod', null);
-          element.data('ujs:submit-button-formaction', null);
-        } else if (element.is(rails.inputChangeSelector)) {
-          method = element.data('method');
-          url = element.data('url');
-          data = element.serialize();
-          if (element.data('params')) data = data + '&' + element.data('params');
-        } else if (element.is(rails.buttonClickSelector)) {
-          method = element.data('method') || 'get';
-          url = element.data('url');
-          data = element.serialize();
-          if (element.data('params')) data = data + '&' + element.data('params');
-        } else {
-          method = element.data('method');
-          url = rails.href(element);
-          data = element.data('params') || null;
-        }
-
-        options = {
-          type: method || 'GET', data: data, dataType: dataType,
-          // stopping the "ajax:beforeSend" event will cancel the ajax request
-          beforeSend: function(xhr, settings) {
-            if (settings.dataType === undefined) {
-              xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
-            }
-            if (rails.fire(element, 'ajax:beforeSend', [xhr, settings])) {
-              element.trigger('ajax:send', xhr);
-            } else {
-              return false;
-            }
-          },
-          success: function(data, status, xhr) {
-            element.trigger('ajax:success', [data, status, xhr]);
-          },
-          complete: function(xhr, status) {
-            element.trigger('ajax:complete', [xhr, status]);
-          },
-          error: function(xhr, status, error) {
-            element.trigger('ajax:error', [xhr, status, error]);
-          },
-          crossDomain: rails.isCrossDomain(url)
-        };
-
-        // There is no withCredentials for IE6-8 when
-        // "Enable native XMLHTTP support" is disabled
-        if (withCredentials) {
-          options.xhrFields = {
-            withCredentials: withCredentials
-          };
-        }
-
-        // Only pass url to `ajax` options if not blank
-        if (url) { options.url = url; }
-
-        return rails.ajax(options);
-      } else {
-        return false;
-      }
-    },
-
-    // Determines if the request is a cross domain request.
-    isCrossDomain: function(url) {
-      var originAnchor = document.createElement('a');
-      originAnchor.href = location.href;
-      var urlAnchor = document.createElement('a');
-
-      try {
-        urlAnchor.href = url;
-        // This is a workaround to a IE bug.
-        urlAnchor.href = urlAnchor.href;
-
-        // If URL protocol is false or is a string containing a single colon
-        // *and* host are false, assume it is not a cross-domain request
-        // (should only be the case for IE7 and IE compatibility mode).
-        // Otherwise, evaluate protocol and host of the URL against the origin
-        // protocol and host.
-        return !(((!urlAnchor.protocol || urlAnchor.protocol === ':') && !urlAnchor.host) ||
-          (originAnchor.protocol + '//' + originAnchor.host ===
-            urlAnchor.protocol + '//' + urlAnchor.host));
-      } catch (e) {
-        // If there is an error parsing the URL, assume it is crossDomain.
-        return true;
-      }
-    },
-
-    // Handles "data-method" on links such as:
-    // <a href="/users/5" data-method="delete" rel="nofollow" data-confirm="Are you sure?">Delete</a>
-    handleMethod: function(link) {
-      var href = rails.href(link),
-        method = link.data('method'),
-        target = link.attr('target'),
-        csrfToken = rails.csrfToken(),
-        csrfParam = rails.csrfParam(),
-        form = $('<form method="post" action="' + href + '"></form>'),
-        metadataInput = '<input name="_method" value="' + method + '" type="hidden" />';
-
-      if (csrfParam !== undefined && csrfToken !== undefined && !rails.isCrossDomain(href)) {
-        metadataInput += '<input name="' + csrfParam + '" value="' + csrfToken + '" type="hidden" />';
-      }
-
-      if (target) { form.attr('target', target); }
-
-      form.hide().append(metadataInput).appendTo('body');
-      form.submit();
-    },
-
-    // Helper function that returns form elements that match the specified CSS selector
-    // If form is actually a "form" element this will return associated elements outside the from that have
-    // the html form attribute set
-    formElements: function(form, selector) {
-      return form.is('form') ? $(form[0].elements).filter(selector) : form.find(selector);
-    },
-
-    /* Disables form elements:
-      - Caches element value in 'ujs:enable-with' data store
-      - Replaces element text with value of 'data-disable-with' attribute
-      - Sets disabled property to true
-    */
-    disableFormElements: function(form) {
-      rails.formElements(form, rails.disableSelector).each(function() {
-        rails.disableFormElement($(this));
-      });
-    },
-
-    disableFormElement: function(element) {
-      var method, replacement;
-
-      method = element.is('button') ? 'html' : 'val';
-      replacement = element.data('disable-with');
-
-      if (replacement !== undefined) {
-        element.data('ujs:enable-with', element[method]());
-        element[method](replacement);
-      }
-
-      element.prop('disabled', true);
-      element.data('ujs:disabled', true);
-    },
-
-    /* Re-enables disabled form elements:
-      - Replaces element text with cached value from 'ujs:enable-with' data store (created in `disableFormElements`)
-      - Sets disabled property to false
-    */
-    enableFormElements: function(form) {
-      rails.formElements(form, rails.enableSelector).each(function() {
-        rails.enableFormElement($(this));
-      });
-    },
-
-    enableFormElement: function(element) {
-      var method = element.is('button') ? 'html' : 'val';
-      if (element.data('ujs:enable-with') !== undefined) {
-        element[method](element.data('ujs:enable-with'));
-        element.removeData('ujs:enable-with'); // clean up cache
-      }
-      element.prop('disabled', false);
-      element.removeData('ujs:disabled');
-    },
-
-   /* For 'data-confirm' attribute:
-      - Fires `confirm` event
-      - Shows the confirmation dialog
-      - Fires the `confirm:complete` event
-
-      Returns `true` if no function stops the chain and user chose yes; `false` otherwise.
-      Attaching a handler to the element's `confirm` event that returns a `falsy` value cancels the confirmation dialog.
-      Attaching a handler to the element's `confirm:complete` event that returns a `falsy` value makes this function
-      return false. The `confirm:complete` event is fired whether or not the user answered true or false to the dialog.
-   */
-    allowAction: function(element) {
-      var message = element.data('confirm'),
-          answer = false, callback;
-      if (!message) { return true; }
-
-      if (rails.fire(element, 'confirm')) {
-        try {
-          answer = rails.confirm(message);
-        } catch (e) {
-          (console.error || console.log).call(console, e.stack || e);
-        }
-        callback = rails.fire(element, 'confirm:complete', [answer]);
-      }
-      return answer && callback;
-    },
-
-    // Helper function which checks for blank inputs in a form that match the specified CSS selector
-    blankInputs: function(form, specifiedSelector, nonBlank) {
-      var inputs = $(), input, valueToCheck,
-          selector = specifiedSelector || 'input,textarea',
-          allInputs = form.find(selector);
-
-      allInputs.each(function() {
-        input = $(this);
-        valueToCheck = input.is('input[type=checkbox],input[type=radio]') ? input.is(':checked') : !!input.val();
-        if (valueToCheck === nonBlank) {
-
-          // Don't count unchecked required radio if other radio with same name is checked
-          if (input.is('input[type=radio]') && allInputs.filter('input[type=radio]:checked[name="' + input.attr('name') + '"]').length) {
-            return true; // Skip to next input
-          }
-
-          inputs = inputs.add(input);
-        }
-      });
-      return inputs.length ? inputs : false;
-    },
-
-    // Helper function which checks for non-blank inputs in a form that match the specified CSS selector
-    nonBlankInputs: function(form, specifiedSelector) {
-      return rails.blankInputs(form, specifiedSelector, true); // true specifies nonBlank
-    },
-
-    // Helper function, needed to provide consistent behavior in IE
-    stopEverything: function(e) {
-      $(e.target).trigger('ujs:everythingStopped');
-      e.stopImmediatePropagation();
-      return false;
-    },
-
-    //  Replace element's html with the 'data-disable-with' after storing original html
-    //  and prevent clicking on it
-    disableElement: function(element) {
-      var replacement = element.data('disable-with');
-
-      if (replacement !== undefined) {
-        element.data('ujs:enable-with', element.html()); // store enabled state
-        element.html(replacement);
-      }
-
-      element.bind('click.railsDisable', function(e) { // prevent further clicking
-        return rails.stopEverything(e);
-      });
-      element.data('ujs:disabled', true);
-    },
-
-    // Restore element to its original state which was disabled by 'disableElement' above
-    enableElement: function(element) {
-      if (element.data('ujs:enable-with') !== undefined) {
-        element.html(element.data('ujs:enable-with')); // set to old enabled state
-        element.removeData('ujs:enable-with'); // clean up cache
-      }
-      element.unbind('click.railsDisable'); // enable element
-      element.removeData('ujs:disabled');
-    }
-  };
-
-  if (rails.fire($document, 'rails:attachBindings')) {
-
-    $.ajaxPrefilter(function(options, originalOptions, xhr){ if ( !options.crossDomain ) { rails.CSRFProtection(xhr); }});
-
-    // This event works the same as the load event, except that it fires every
-    // time the page is loaded.
-    //
-    // See https://github.com/rails/jquery-ujs/issues/357
-    // See https://developer.mozilla.org/en-US/docs/Using_Firefox_1.5_caching
-    $(window).on('pageshow.rails', function () {
-      $($.rails.enableSelector).each(function () {
-        var element = $(this);
-
-        if (element.data('ujs:disabled')) {
-          $.rails.enableFormElement(element);
-        }
-      });
-
-      $($.rails.linkDisableSelector).each(function () {
-        var element = $(this);
-
-        if (element.data('ujs:disabled')) {
-          $.rails.enableElement(element);
-        }
-      });
-    });
-
-    $document.delegate(rails.linkDisableSelector, 'ajax:complete', function() {
-        rails.enableElement($(this));
-    });
-
-    $document.delegate(rails.buttonDisableSelector, 'ajax:complete', function() {
-        rails.enableFormElement($(this));
-    });
-
-    $document.delegate(rails.linkClickSelector, 'click.rails', function(e) {
-      var link = $(this), method = link.data('method'), data = link.data('params'), metaClick = e.metaKey || e.ctrlKey;
-      if (!rails.allowAction(link)) return rails.stopEverything(e);
-
-      if (!metaClick && link.is(rails.linkDisableSelector)) rails.disableElement(link);
-
-      if (rails.isRemote(link)) {
-        if (metaClick && (!method || method === 'GET') && !data) { return true; }
-
-        var handleRemote = rails.handleRemote(link);
-        // Response from rails.handleRemote() will either be false or a deferred object promise.
-        if (handleRemote === false) {
-          rails.enableElement(link);
-        } else {
-          handleRemote.fail( function() { rails.enableElement(link); } );
-        }
-        return false;
-
-      } else if (method) {
-        rails.handleMethod(link);
-        return false;
-      }
-    });
-
-    $document.delegate(rails.buttonClickSelector, 'click.rails', function(e) {
-      var button = $(this);
-
-      if (!rails.allowAction(button) || !rails.isRemote(button)) return rails.stopEverything(e);
-
-      if (button.is(rails.buttonDisableSelector)) rails.disableFormElement(button);
-
-      var handleRemote = rails.handleRemote(button);
-      // Response from rails.handleRemote() will either be false or a deferred object promise.
-      if (handleRemote === false) {
-        rails.enableFormElement(button);
-      } else {
-        handleRemote.fail( function() { rails.enableFormElement(button); } );
-      }
-      return false;
-    });
-
-    $document.delegate(rails.inputChangeSelector, 'change.rails', function(e) {
-      var link = $(this);
-      if (!rails.allowAction(link) || !rails.isRemote(link)) return rails.stopEverything(e);
-
-      rails.handleRemote(link);
-      return false;
-    });
-
-    $document.delegate(rails.formSubmitSelector, 'submit.rails', function(e) {
-      var form = $(this),
-        remote = rails.isRemote(form),
-        blankRequiredInputs,
-        nonBlankFileInputs;
-
-      if (!rails.allowAction(form)) return rails.stopEverything(e);
-
-      // Skip other logic when required values are missing or file upload is present
-      if (form.attr('novalidate') === undefined) {
-        if (form.data('ujs:formnovalidate-button') === undefined) {
-          blankRequiredInputs = rails.blankInputs(form, rails.requiredInputSelector, false);
-          if (blankRequiredInputs && rails.fire(form, 'ajax:aborted:required', [blankRequiredInputs])) {
-            return rails.stopEverything(e);
-          }
-        } else {
-          // Clear the formnovalidate in case the next button click is not on a formnovalidate button
-          // Not strictly necessary to do here, since it is also reset on each button click, but just to be certain
-          form.data('ujs:formnovalidate-button', undefined);
-        }
-      }
-
-      if (remote) {
-        nonBlankFileInputs = rails.nonBlankInputs(form, rails.fileInputSelector);
-        if (nonBlankFileInputs) {
-          // Slight timeout so that the submit button gets properly serialized
-          // (make it easy for event handler to serialize form without disabled values)
-          setTimeout(function(){ rails.disableFormElements(form); }, 13);
-          var aborted = rails.fire(form, 'ajax:aborted:file', [nonBlankFileInputs]);
-
-          // Re-enable form elements if event bindings return false (canceling normal form submission)
-          if (!aborted) { setTimeout(function(){ rails.enableFormElements(form); }, 13); }
-
-          return aborted;
-        }
-
-        rails.handleRemote(form);
-        return false;
-
-      } else {
-        // Slight timeout so that the submit button gets properly serialized
-        setTimeout(function(){ rails.disableFormElements(form); }, 13);
-      }
-    });
-
-    $document.delegate(rails.formInputClickSelector, 'click.rails', function(event) {
-      var button = $(this);
-
-      if (!rails.allowAction(button)) return rails.stopEverything(event);
-
-      // Register the pressed submit button
-      var name = button.attr('name'),
-        data = name ? {name:name, value:button.val()} : null;
-
-      var form = button.closest('form');
-      if (form.length === 0) {
-        form = $('#' + button.attr('form'));
-      }
-      form.data('ujs:submit-button', data);
-
-      // Save attributes from button
-      form.data('ujs:formnovalidate-button', button.attr('formnovalidate'));
-      form.data('ujs:submit-button-formaction', button.attr('formaction'));
-      form.data('ujs:submit-button-formmethod', button.attr('formmethod'));
-    });
-
-    $document.delegate(rails.formSubmitSelector, 'ajax:send.rails', function(event) {
-      if (this === event.target) rails.disableFormElements($(this));
-    });
-
-    $document.delegate(rails.formSubmitSelector, 'ajax:complete.rails', function(event) {
-      if (this === event.target) rails.enableFormElements($(this));
-    });
-
-    $(function(){
-      rails.refreshCSRFTokens();
-    });
-  }
-
-})( jQuery );
-(function() {
-  var CSRFToken, Click, ComponentUrl, EVENTS, Link, ProgressBar, browserIsntBuggy, browserSupportsCustomEvents, browserSupportsPushState, browserSupportsTurbolinks, bypassOnLoadPopstate, cacheCurrentPage, cacheSize, changePage, clone, constrainPageCacheTo, createDocument, crossOriginRedirect, currentState, enableProgressBar, enableTransitionCache, executeScriptTags, extractTitleAndBody, fetch, fetchHistory, fetchReplacement, historyStateIsDefined, initializeTurbolinks, installDocumentReadyPageEventTriggers, installHistoryChangeHandler, installJqueryAjaxSuccessPageUpdateTrigger, loadedAssets, manuallyTriggerHashChangeForFirefox, pageCache, pageChangePrevented, pagesCached, popCookie, processResponse, progressBar, recallScrollPosition, ref, referer, reflectNewUrl, reflectRedirectedUrl, rememberCurrentState, rememberCurrentUrl, rememberReferer, removeNoscriptTags, requestMethodIsSafe, resetScrollPosition, setAutofocusElement, transitionCacheEnabled, transitionCacheFor, triggerEvent, visit, xhr,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty,
-    slice = [].slice,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  pageCache = {};
-
-  cacheSize = 10;
-
-  transitionCacheEnabled = false;
-
-  progressBar = null;
-
-  currentState = null;
-
-  loadedAssets = null;
-
-  referer = null;
-
-  xhr = null;
-
-  EVENTS = {
-    BEFORE_CHANGE: 'page:before-change',
-    FETCH: 'page:fetch',
-    RECEIVE: 'page:receive',
-    CHANGE: 'page:change',
-    UPDATE: 'page:update',
-    LOAD: 'page:load',
-    RESTORE: 'page:restore',
-    BEFORE_UNLOAD: 'page:before-unload',
-    EXPIRE: 'page:expire'
-  };
-
-  fetch = function(url) {
-    var cachedPage;
-    url = new ComponentUrl(url);
-    rememberReferer();
-    cacheCurrentPage();
-    if (progressBar != null) {
-      progressBar.start();
-    }
-    if (transitionCacheEnabled && (cachedPage = transitionCacheFor(url.absolute))) {
-      fetchHistory(cachedPage);
-      return fetchReplacement(url, null, false);
-    } else {
-      return fetchReplacement(url, resetScrollPosition);
-    }
-  };
-
-  transitionCacheFor = function(url) {
-    var cachedPage;
-    cachedPage = pageCache[url];
-    if (cachedPage && !cachedPage.transitionCacheDisabled) {
-      return cachedPage;
-    }
-  };
-
-  enableTransitionCache = function(enable) {
-    if (enable == null) {
-      enable = true;
-    }
-    return transitionCacheEnabled = enable;
-  };
-
-  enableProgressBar = function(enable) {
-    if (enable == null) {
-      enable = true;
-    }
-    if (!browserSupportsTurbolinks) {
-      return;
-    }
-    if (enable) {
-      return progressBar != null ? progressBar : progressBar = new ProgressBar('html');
-    } else {
-      if (progressBar != null) {
-        progressBar.uninstall();
-      }
-      return progressBar = null;
-    }
-  };
-
-  fetchReplacement = function(url, onLoadFunction, showProgressBar) {
-    if (showProgressBar == null) {
-      showProgressBar = true;
-    }
-    triggerEvent(EVENTS.FETCH, {
-      url: url.absolute
-    });
-    if (xhr != null) {
-      xhr.abort();
-    }
-    xhr = new XMLHttpRequest;
-    xhr.open('GET', url.withoutHashForIE10compatibility(), true);
-    xhr.setRequestHeader('Accept', 'text/html, application/xhtml+xml, application/xml');
-    xhr.setRequestHeader('X-XHR-Referer', referer);
-    xhr.onload = function() {
-      var doc;
-      triggerEvent(EVENTS.RECEIVE, {
-        url: url.absolute
-      });
-      if (doc = processResponse()) {
-        reflectNewUrl(url);
-        reflectRedirectedUrl();
-        changePage.apply(null, extractTitleAndBody(doc));
-        manuallyTriggerHashChangeForFirefox();
-        if (typeof onLoadFunction === "function") {
-          onLoadFunction();
-        }
-        return triggerEvent(EVENTS.LOAD);
-      } else {
-        return document.location.href = crossOriginRedirect() || url.absolute;
-      }
-    };
-    if (progressBar && showProgressBar) {
-      xhr.onprogress = (function(_this) {
-        return function(event) {
-          var percent;
-          percent = event.lengthComputable ? event.loaded / event.total * 100 : progressBar.value + (100 - progressBar.value) / 10;
-          return progressBar.advanceTo(percent);
-        };
-      })(this);
-    }
-    xhr.onloadend = function() {
-      return xhr = null;
-    };
-    xhr.onerror = function() {
-      return document.location.href = url.absolute;
-    };
-    return xhr.send();
-  };
-
-  fetchHistory = function(cachedPage) {
-    if (xhr != null) {
-      xhr.abort();
-    }
-    changePage(cachedPage.title, cachedPage.body);
-    recallScrollPosition(cachedPage);
-    return triggerEvent(EVENTS.RESTORE);
-  };
-
-  cacheCurrentPage = function() {
-    var currentStateUrl;
-    currentStateUrl = new ComponentUrl(currentState.url);
-    pageCache[currentStateUrl.absolute] = {
-      url: currentStateUrl.relative,
-      body: document.body,
-      title: document.title,
-      positionY: window.pageYOffset,
-      positionX: window.pageXOffset,
-      cachedAt: new Date().getTime(),
-      transitionCacheDisabled: document.querySelector('[data-no-transition-cache]') != null
-    };
-    return constrainPageCacheTo(cacheSize);
-  };
-
-  pagesCached = function(size) {
-    if (size == null) {
-      size = cacheSize;
-    }
-    if (/^[\d]+$/.test(size)) {
-      return cacheSize = parseInt(size);
-    }
-  };
-
-  constrainPageCacheTo = function(limit) {
-    var cacheTimesRecentFirst, i, key, len, pageCacheKeys, results;
-    pageCacheKeys = Object.keys(pageCache);
-    cacheTimesRecentFirst = pageCacheKeys.map(function(url) {
-      return pageCache[url].cachedAt;
-    }).sort(function(a, b) {
-      return b - a;
-    });
-    results = [];
-    for (i = 0, len = pageCacheKeys.length; i < len; i++) {
-      key = pageCacheKeys[i];
-      if (!(pageCache[key].cachedAt <= cacheTimesRecentFirst[limit])) {
-        continue;
-      }
-      triggerEvent(EVENTS.EXPIRE, pageCache[key]);
-      results.push(delete pageCache[key]);
-    }
-    return results;
-  };
-
-  changePage = function(title, body, csrfToken, runScripts) {
-    triggerEvent(EVENTS.BEFORE_UNLOAD);
-    document.title = title;
-    document.documentElement.replaceChild(body, document.body);
-    if (csrfToken != null) {
-      CSRFToken.update(csrfToken);
-    }
-    setAutofocusElement();
-    if (runScripts) {
-      executeScriptTags();
-    }
-    currentState = window.history.state;
-    if (progressBar != null) {
-      progressBar.done();
-    }
-    triggerEvent(EVENTS.CHANGE);
-    return triggerEvent(EVENTS.UPDATE);
-  };
-
-  executeScriptTags = function() {
-    var attr, copy, i, j, len, len1, nextSibling, parentNode, ref, ref1, script, scripts;
-    scripts = Array.prototype.slice.call(document.body.querySelectorAll('script:not([data-turbolinks-eval="false"])'));
-    for (i = 0, len = scripts.length; i < len; i++) {
-      script = scripts[i];
-      if (!((ref = script.type) === '' || ref === 'text/javascript')) {
-        continue;
-      }
-      copy = document.createElement('script');
-      ref1 = script.attributes;
-      for (j = 0, len1 = ref1.length; j < len1; j++) {
-        attr = ref1[j];
-        copy.setAttribute(attr.name, attr.value);
-      }
-      if (!script.hasAttribute('async')) {
-        copy.async = false;
-      }
-      copy.appendChild(document.createTextNode(script.innerHTML));
-      parentNode = script.parentNode, nextSibling = script.nextSibling;
-      parentNode.removeChild(script);
-      parentNode.insertBefore(copy, nextSibling);
-    }
-  };
-
-  removeNoscriptTags = function(node) {
-    node.innerHTML = node.innerHTML.replace(/<noscript[\S\s]*?<\/noscript>/ig, '');
-    return node;
-  };
-
-  setAutofocusElement = function() {
-    var autofocusElement, list;
-    autofocusElement = (list = document.querySelectorAll('input[autofocus], textarea[autofocus]'))[list.length - 1];
-    if (autofocusElement && document.activeElement !== autofocusElement) {
-      return autofocusElement.focus();
-    }
-  };
-
-  reflectNewUrl = function(url) {
-    if ((url = new ComponentUrl(url)).absolute !== referer) {
-      return window.history.pushState({
-        turbolinks: true,
-        url: url.absolute
-      }, '', url.absolute);
-    }
-  };
-
-  reflectRedirectedUrl = function() {
-    var location, preservedHash;
-    if (location = xhr.getResponseHeader('X-XHR-Redirected-To')) {
-      location = new ComponentUrl(location);
-      preservedHash = location.hasNoHash() ? document.location.hash : '';
-      return window.history.replaceState(window.history.state, '', location.href + preservedHash);
-    }
-  };
-
-  crossOriginRedirect = function() {
-    var redirect;
-    if (((redirect = xhr.getResponseHeader('Location')) != null) && (new ComponentUrl(redirect)).crossOrigin()) {
-      return redirect;
-    }
-  };
-
-  rememberReferer = function() {
-    return referer = document.location.href;
-  };
-
-  rememberCurrentUrl = function() {
-    return window.history.replaceState({
-      turbolinks: true,
-      url: document.location.href
-    }, '', document.location.href);
-  };
-
-  rememberCurrentState = function() {
-    return currentState = window.history.state;
-  };
-
-  manuallyTriggerHashChangeForFirefox = function() {
-    var url;
-    if (navigator.userAgent.match(/Firefox/) && !(url = new ComponentUrl).hasNoHash()) {
-      window.history.replaceState(currentState, '', url.withoutHash());
-      return document.location.hash = url.hash;
-    }
-  };
-
-  recallScrollPosition = function(page) {
-    return window.scrollTo(page.positionX, page.positionY);
-  };
-
-  resetScrollPosition = function() {
-    if (document.location.hash) {
-      return document.location.href = document.location.href;
-    } else {
-      return window.scrollTo(0, 0);
-    }
-  };
-
-  clone = function(original) {
-    var copy, key, value;
-    if ((original == null) || typeof original !== 'object') {
-      return original;
-    }
-    copy = new original.constructor();
-    for (key in original) {
-      value = original[key];
-      copy[key] = clone(value);
-    }
-    return copy;
-  };
-
-  popCookie = function(name) {
-    var ref, value;
-    value = ((ref = document.cookie.match(new RegExp(name + "=(\\w+)"))) != null ? ref[1].toUpperCase() : void 0) || '';
-    document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/';
-    return value;
-  };
-
-  triggerEvent = function(name, data) {
-    var event;
-    if (typeof Prototype !== 'undefined') {
-      Event.fire(document, name, data, true);
-    }
-    event = document.createEvent('Events');
-    if (data) {
-      event.data = data;
-    }
-    event.initEvent(name, true, true);
-    return document.dispatchEvent(event);
-  };
-
-  pageChangePrevented = function(url) {
-    return !triggerEvent(EVENTS.BEFORE_CHANGE, {
-      url: url
-    });
-  };
-
-  processResponse = function() {
-    var assetsChanged, clientOrServerError, doc, extractTrackAssets, intersection, validContent;
-    clientOrServerError = function() {
-      var ref;
-      return (400 <= (ref = xhr.status) && ref < 600);
-    };
-    validContent = function() {
-      var contentType;
-      return ((contentType = xhr.getResponseHeader('Content-Type')) != null) && contentType.match(/^(?:text\/html|application\/xhtml\+xml|application\/xml)(?:;|$)/);
-    };
-    extractTrackAssets = function(doc) {
-      var i, len, node, ref, results;
-      ref = doc.querySelector('head').childNodes;
-      results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        node = ref[i];
-        if ((typeof node.getAttribute === "function" ? node.getAttribute('data-turbolinks-track') : void 0) != null) {
-          results.push(node.getAttribute('src') || node.getAttribute('href'));
-        }
-      }
-      return results;
-    };
-    assetsChanged = function(doc) {
-      var fetchedAssets;
-      loadedAssets || (loadedAssets = extractTrackAssets(document));
-      fetchedAssets = extractTrackAssets(doc);
-      return fetchedAssets.length !== loadedAssets.length || intersection(fetchedAssets, loadedAssets).length !== loadedAssets.length;
-    };
-    intersection = function(a, b) {
-      var i, len, ref, results, value;
-      if (a.length > b.length) {
-        ref = [b, a], a = ref[0], b = ref[1];
-      }
-      results = [];
-      for (i = 0, len = a.length; i < len; i++) {
-        value = a[i];
-        if (indexOf.call(b, value) >= 0) {
-          results.push(value);
-        }
-      }
-      return results;
-    };
-    if (!clientOrServerError() && validContent()) {
-      doc = createDocument(xhr.responseText);
-      if (doc && !assetsChanged(doc)) {
-        return doc;
-      }
-    }
-  };
-
-  extractTitleAndBody = function(doc) {
-    var title;
-    title = doc.querySelector('title');
-    return [title != null ? title.textContent : void 0, removeNoscriptTags(doc.querySelector('body')), CSRFToken.get(doc).token, 'runScripts'];
-  };
-
-  CSRFToken = {
-    get: function(doc) {
-      var tag;
-      if (doc == null) {
-        doc = document;
-      }
-      return {
-        node: tag = doc.querySelector('meta[name="csrf-token"]'),
-        token: tag != null ? typeof tag.getAttribute === "function" ? tag.getAttribute('content') : void 0 : void 0
-      };
-    },
-    update: function(latest) {
-      var current;
-      current = this.get();
-      if ((current.token != null) && (latest != null) && current.token !== latest) {
-        return current.node.setAttribute('content', latest);
-      }
-    }
-  };
-
-  createDocument = function(html) {
-    var doc;
-    doc = document.documentElement.cloneNode();
-    doc.innerHTML = html;
-    doc.head = doc.querySelector('head');
-    doc.body = doc.querySelector('body');
-    return doc;
-  };
-
-  ComponentUrl = (function() {
-    function ComponentUrl(original1) {
-      this.original = original1 != null ? original1 : document.location.href;
-      if (this.original.constructor === ComponentUrl) {
-        return this.original;
-      }
-      this._parse();
-    }
-
-    ComponentUrl.prototype.withoutHash = function() {
-      return this.href.replace(this.hash, '').replace('#', '');
-    };
-
-    ComponentUrl.prototype.withoutHashForIE10compatibility = function() {
-      return this.withoutHash();
-    };
-
-    ComponentUrl.prototype.hasNoHash = function() {
-      return this.hash.length === 0;
-    };
-
-    ComponentUrl.prototype.crossOrigin = function() {
-      return this.origin !== (new ComponentUrl).origin;
-    };
-
-    ComponentUrl.prototype._parse = function() {
-      var ref;
-      (this.link != null ? this.link : this.link = document.createElement('a')).href = this.original;
-      ref = this.link, this.href = ref.href, this.protocol = ref.protocol, this.host = ref.host, this.hostname = ref.hostname, this.port = ref.port, this.pathname = ref.pathname, this.search = ref.search, this.hash = ref.hash;
-      this.origin = [this.protocol, '//', this.hostname].join('');
-      if (this.port.length !== 0) {
-        this.origin += ":" + this.port;
-      }
-      this.relative = [this.pathname, this.search, this.hash].join('');
-      return this.absolute = this.href;
-    };
-
-    return ComponentUrl;
-
-  })();
-
-  Link = (function(superClass) {
-    extend(Link, superClass);
-
-    Link.HTML_EXTENSIONS = ['html'];
-
-    Link.allowExtensions = function() {
-      var extension, extensions, i, len;
-      extensions = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      for (i = 0, len = extensions.length; i < len; i++) {
-        extension = extensions[i];
-        Link.HTML_EXTENSIONS.push(extension);
-      }
-      return Link.HTML_EXTENSIONS;
-    };
-
-    function Link(link1) {
-      this.link = link1;
-      if (this.link.constructor === Link) {
-        return this.link;
-      }
-      this.original = this.link.href;
-      this.originalElement = this.link;
-      this.link = this.link.cloneNode(false);
-      Link.__super__.constructor.apply(this, arguments);
-    }
-
-    Link.prototype.shouldIgnore = function() {
-      return this.crossOrigin() || this._anchored() || this._nonHtml() || this._optOut() || this._target();
-    };
-
-    Link.prototype._anchored = function() {
-      return (this.hash.length > 0 || this.href.charAt(this.href.length - 1) === '#') && (this.withoutHash() === (new ComponentUrl).withoutHash());
-    };
-
-    Link.prototype._nonHtml = function() {
-      return this.pathname.match(/\.[a-z]+$/g) && !this.pathname.match(new RegExp("\\.(?:" + (Link.HTML_EXTENSIONS.join('|')) + ")?$", 'g'));
-    };
-
-    Link.prototype._optOut = function() {
-      var ignore, link;
-      link = this.originalElement;
-      while (!(ignore || link === document)) {
-        ignore = link.getAttribute('data-no-turbolink') != null;
-        link = link.parentNode;
-      }
-      return ignore;
-    };
-
-    Link.prototype._target = function() {
-      return this.link.target.length !== 0;
-    };
-
-    return Link;
-
-  })(ComponentUrl);
-
-  Click = (function() {
-    Click.installHandlerLast = function(event) {
-      if (!event.defaultPrevented) {
-        document.removeEventListener('click', Click.handle, false);
-        return document.addEventListener('click', Click.handle, false);
-      }
-    };
-
-    Click.handle = function(event) {
-      return new Click(event);
-    };
-
-    function Click(event1) {
-      this.event = event1;
-      if (this.event.defaultPrevented) {
-        return;
-      }
-      this._extractLink();
-      if (this._validForTurbolinks()) {
-        if (!pageChangePrevented(this.link.absolute)) {
-          visit(this.link.href);
-        }
-        this.event.preventDefault();
-      }
-    }
-
-    Click.prototype._extractLink = function() {
-      var link;
-      link = this.event.target;
-      while (!(!link.parentNode || link.nodeName === 'A')) {
-        link = link.parentNode;
-      }
-      if (link.nodeName === 'A' && link.href.length !== 0) {
-        return this.link = new Link(link);
-      }
-    };
-
-    Click.prototype._validForTurbolinks = function() {
-      return (this.link != null) && !(this.link.shouldIgnore() || this._nonStandardClick());
-    };
-
-    Click.prototype._nonStandardClick = function() {
-      return this.event.which > 1 || this.event.metaKey || this.event.ctrlKey || this.event.shiftKey || this.event.altKey;
-    };
-
-    return Click;
-
-  })();
-
-  ProgressBar = (function() {
-    var className;
-
-    className = 'turbolinks-progress-bar';
-
-    function ProgressBar(elementSelector) {
-      this.elementSelector = elementSelector;
-      this._trickle = bind(this._trickle, this);
-      this.value = 0;
-      this.content = '';
-      this.speed = 300;
-      this.opacity = 0.99;
-      this.install();
-    }
-
-    ProgressBar.prototype.install = function() {
-      this.element = document.querySelector(this.elementSelector);
-      this.element.classList.add(className);
-      this.styleElement = document.createElement('style');
-      document.head.appendChild(this.styleElement);
-      return this._updateStyle();
-    };
-
-    ProgressBar.prototype.uninstall = function() {
-      this.element.classList.remove(className);
-      return document.head.removeChild(this.styleElement);
-    };
-
-    ProgressBar.prototype.start = function() {
-      return this.advanceTo(5);
-    };
-
-    ProgressBar.prototype.advanceTo = function(value) {
-      var ref;
-      if ((value > (ref = this.value) && ref <= 100)) {
-        this.value = value;
-        this._updateStyle();
-        if (this.value === 100) {
-          return this._stopTrickle();
-        } else if (this.value > 0) {
-          return this._startTrickle();
-        }
-      }
-    };
-
-    ProgressBar.prototype.done = function() {
-      if (this.value > 0) {
-        this.advanceTo(100);
-        return this._reset();
-      }
-    };
-
-    ProgressBar.prototype._reset = function() {
-      var originalOpacity;
-      originalOpacity = this.opacity;
-      setTimeout((function(_this) {
-        return function() {
-          _this.opacity = 0;
-          return _this._updateStyle();
-        };
-      })(this), this.speed / 2);
-      return setTimeout((function(_this) {
-        return function() {
-          _this.value = 0;
-          _this.opacity = originalOpacity;
-          return _this._withSpeed(0, function() {
-            return _this._updateStyle(true);
-          });
-        };
-      })(this), this.speed);
-    };
-
-    ProgressBar.prototype._startTrickle = function() {
-      if (this.trickling) {
-        return;
-      }
-      this.trickling = true;
-      return setTimeout(this._trickle, this.speed);
-    };
-
-    ProgressBar.prototype._stopTrickle = function() {
-      return delete this.trickling;
-    };
-
-    ProgressBar.prototype._trickle = function() {
-      if (!this.trickling) {
-        return;
-      }
-      this.advanceTo(this.value + Math.random() / 2);
-      return setTimeout(this._trickle, this.speed);
-    };
-
-    ProgressBar.prototype._withSpeed = function(speed, fn) {
-      var originalSpeed, result;
-      originalSpeed = this.speed;
-      this.speed = speed;
-      result = fn();
-      this.speed = originalSpeed;
-      return result;
-    };
-
-    ProgressBar.prototype._updateStyle = function(forceRepaint) {
-      if (forceRepaint == null) {
-        forceRepaint = false;
-      }
-      if (forceRepaint) {
-        this._changeContentToForceRepaint();
-      }
-      return this.styleElement.textContent = this._createCSSRule();
-    };
-
-    ProgressBar.prototype._changeContentToForceRepaint = function() {
-      return this.content = this.content === '' ? ' ' : '';
-    };
-
-    ProgressBar.prototype._createCSSRule = function() {
-      return this.elementSelector + "." + className + "::before {\n  content: '" + this.content + "';\n  position: fixed;\n  top: 0;\n  left: 0;\n  z-index: 2000;\n  background-color: #0076ff;\n  height: 3px;\n  opacity: " + this.opacity + ";\n  width: " + this.value + "%;\n  transition: width " + this.speed + "ms ease-out, opacity " + (this.speed / 2) + "ms ease-in;\n  transform: translate3d(0,0,0);\n}";
-    };
-
-    return ProgressBar;
-
-  })();
-
-  bypassOnLoadPopstate = function(fn) {
-    return setTimeout(fn, 500);
-  };
-
-  installDocumentReadyPageEventTriggers = function() {
-    return document.addEventListener('DOMContentLoaded', (function() {
-      triggerEvent(EVENTS.CHANGE);
-      return triggerEvent(EVENTS.UPDATE);
-    }), true);
-  };
-
-  installJqueryAjaxSuccessPageUpdateTrigger = function() {
-    if (typeof jQuery !== 'undefined') {
-      return jQuery(document).on('ajaxSuccess', function(event, xhr, settings) {
-        if (!jQuery.trim(xhr.responseText)) {
-          return;
-        }
-        return triggerEvent(EVENTS.UPDATE);
-      });
-    }
-  };
-
-  installHistoryChangeHandler = function(event) {
-    var cachedPage, ref;
-    if ((ref = event.state) != null ? ref.turbolinks : void 0) {
-      if (cachedPage = pageCache[(new ComponentUrl(event.state.url)).absolute]) {
-        cacheCurrentPage();
-        return fetchHistory(cachedPage);
-      } else {
-        return visit(event.target.location.href);
-      }
-    }
-  };
-
-  initializeTurbolinks = function() {
-    rememberCurrentUrl();
-    rememberCurrentState();
-    document.addEventListener('click', Click.installHandlerLast, true);
-    window.addEventListener('hashchange', function(event) {
-      rememberCurrentUrl();
-      return rememberCurrentState();
-    }, false);
-    return bypassOnLoadPopstate(function() {
-      return window.addEventListener('popstate', installHistoryChangeHandler, false);
-    });
-  };
-
-  historyStateIsDefined = window.history.state !== void 0 || navigator.userAgent.match(/Firefox\/2[6|7]/);
-
-  browserSupportsPushState = window.history && window.history.pushState && window.history.replaceState && historyStateIsDefined;
-
-  browserIsntBuggy = !navigator.userAgent.match(/CriOS\//);
-
-  requestMethodIsSafe = (ref = popCookie('request_method')) === 'GET' || ref === '';
-
-  browserSupportsTurbolinks = browserSupportsPushState && browserIsntBuggy && requestMethodIsSafe;
-
-  browserSupportsCustomEvents = document.addEventListener && document.createEvent;
-
-  if (browserSupportsCustomEvents) {
-    installDocumentReadyPageEventTriggers();
-    installJqueryAjaxSuccessPageUpdateTrigger();
-  }
-
-  if (browserSupportsTurbolinks) {
-    visit = fetch;
-    initializeTurbolinks();
-  } else {
-    visit = function(url) {
-      return document.location.href = url;
-    };
-  }
-
-  this.Turbolinks = {
-    visit: visit,
-    pagesCached: pagesCached,
-    enableTransitionCache: enableTransitionCache,
-    enableProgressBar: enableProgressBar,
-    allowLinkExtensions: Link.allowExtensions,
-    supported: browserSupportsTurbolinks,
-    EVENTS: clone(EVENTS)
-  };
-
-}).call(this);
 /* ========================================================================
  * Bootstrap: affix.js v3.3.6
  * http://getbootstrap.com/javascript/#affix
@@ -31980,846 +30666,2123 @@ return $.widget( "ui.tooltip", {
 
 
 
+(function($, undefined) {
+
 /**
- * jquery.meio.mask.js
- * @author: fabiomcosta
- * @version: 1.1.14
+ * Unobtrusive scripting adapter for jQuery
+ * https://github.com/rails/jquery-ujs
  *
- * Created by Fabio M. Costa on 2008-09-16. Please report any bug at http://www.meiocodigo.com
+ * Requires jQuery 1.8.0 or later.
  *
- * Copyright (c) 2008 Fabio M. Costa http://www.meiocodigo.com
+ * Released under the MIT license
  *
- * The MIT License (http://www.opensource.org/licenses/mit-license.php)
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+  // Cut down on the number of issues from people inadvertently including jquery_ujs twice
+  // by detecting and raising an error when it happens.
+  'use strict';
 
-(function($) {
+  if ( $.rails !== undefined ) {
+    $.error('jquery-ujs has already been loaded!');
+  }
 
-    // https://github.com/jquery/jquery-migrate/blob/master/src/core.js#L50
-    if (!$.browser) {
-        var uaMatch = function(ua) {
-            ua = ua.toLowerCase();
+  // Shorthand to make it a little easier to call public rails functions from within rails.js
+  var rails;
+  var $document = $(document);
 
-            var match = /(chrome)[ \/]([\w.]+)/.exec(ua) || /(webkit)[ \/]([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || ua.indexOf('compatible') < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) || [];
+  $.rails = rails = {
+    // Link elements bound by jquery-ujs
+    linkClickSelector: 'a[data-confirm], a[data-method], a[data-remote]:not([disabled]), a[data-disable-with], a[data-disable]',
 
-            return match[2] || '0';
+    // Button elements bound by jquery-ujs
+    buttonClickSelector: 'button[data-remote]:not([form]):not(form button), button[data-confirm]:not([form]):not(form button)',
+
+    // Select elements bound by jquery-ujs
+    inputChangeSelector: 'select[data-remote], input[data-remote], textarea[data-remote]',
+
+    // Form elements bound by jquery-ujs
+    formSubmitSelector: 'form',
+
+    // Form input elements bound by jquery-ujs
+    formInputClickSelector: 'form input[type=submit], form input[type=image], form button[type=submit], form button:not([type]), input[type=submit][form], input[type=image][form], button[type=submit][form], button[form]:not([type])',
+
+    // Form input elements disabled during form submission
+    disableSelector: 'input[data-disable-with]:enabled, button[data-disable-with]:enabled, textarea[data-disable-with]:enabled, input[data-disable]:enabled, button[data-disable]:enabled, textarea[data-disable]:enabled',
+
+    // Form input elements re-enabled after form submission
+    enableSelector: 'input[data-disable-with]:disabled, button[data-disable-with]:disabled, textarea[data-disable-with]:disabled, input[data-disable]:disabled, button[data-disable]:disabled, textarea[data-disable]:disabled',
+
+    // Form required input elements
+    requiredInputSelector: 'input[name][required]:not([disabled]), textarea[name][required]:not([disabled])',
+
+    // Form file input elements
+    fileInputSelector: 'input[type=file]:not([disabled])',
+
+    // Link onClick disable selector with possible reenable after remote submission
+    linkDisableSelector: 'a[data-disable-with], a[data-disable]',
+
+    // Button onClick disable selector with possible reenable after remote submission
+    buttonDisableSelector: 'button[data-remote][data-disable-with], button[data-remote][data-disable]',
+
+    // Up-to-date Cross-Site Request Forgery token
+    csrfToken: function() {
+     return $('meta[name=csrf-token]').attr('content');
+    },
+
+    // URL param that must contain the CSRF token
+    csrfParam: function() {
+     return $('meta[name=csrf-param]').attr('content');
+    },
+
+    // Make sure that every Ajax request sends the CSRF token
+    CSRFProtection: function(xhr) {
+      var token = rails.csrfToken();
+      if (token) xhr.setRequestHeader('X-CSRF-Token', token);
+    },
+
+    // Make sure that all forms have actual up-to-date tokens (cached forms contain old ones)
+    refreshCSRFTokens: function(){
+      $('form input[name="' + rails.csrfParam() + '"]').val(rails.csrfToken());
+    },
+
+    // Triggers an event on an element and returns false if the event result is false
+    fire: function(obj, name, data) {
+      var event = $.Event(name);
+      obj.trigger(event, data);
+      return event.result !== false;
+    },
+
+    // Default confirm dialog, may be overridden with custom confirm dialog in $.rails.confirm
+    confirm: function(message) {
+      return confirm(message);
+    },
+
+    // Default ajax function, may be overridden with custom function in $.rails.ajax
+    ajax: function(options) {
+      return $.ajax(options);
+    },
+
+    // Default way to get an element's href. May be overridden at $.rails.href.
+    href: function(element) {
+      return element[0].href;
+    },
+
+    // Checks "data-remote" if true to handle the request through a XHR request.
+    isRemote: function(element) {
+      return element.data('remote') !== undefined && element.data('remote') !== false;
+    },
+
+    // Submits "remote" forms and links with ajax
+    handleRemote: function(element) {
+      var method, url, data, withCredentials, dataType, options;
+
+      if (rails.fire(element, 'ajax:before')) {
+        withCredentials = element.data('with-credentials') || null;
+        dataType = element.data('type') || ($.ajaxSettings && $.ajaxSettings.dataType);
+
+        if (element.is('form')) {
+          method = element.data('ujs:submit-button-formmethod') || element.attr('method');
+          url = element.data('ujs:submit-button-formaction') || element.attr('action');
+          data = $(element[0].elements).serializeArray();
+          // memoized value from clicked submit button
+          var button = element.data('ujs:submit-button');
+          if (button) {
+            data.push(button);
+            element.data('ujs:submit-button', null);
+          }
+          element.data('ujs:submit-button-formmethod', null);
+          element.data('ujs:submit-button-formaction', null);
+        } else if (element.is(rails.inputChangeSelector)) {
+          method = element.data('method');
+          url = element.data('url');
+          data = element.serialize();
+          if (element.data('params')) data = data + '&' + element.data('params');
+        } else if (element.is(rails.buttonClickSelector)) {
+          method = element.data('method') || 'get';
+          url = element.data('url');
+          data = element.serialize();
+          if (element.data('params')) data = data + '&' + element.data('params');
+        } else {
+          method = element.data('method');
+          url = rails.href(element);
+          data = element.data('params') || null;
+        }
+
+        options = {
+          type: method || 'GET', data: data, dataType: dataType,
+          // stopping the "ajax:beforeSend" event will cancel the ajax request
+          beforeSend: function(xhr, settings) {
+            if (settings.dataType === undefined) {
+              xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
+            }
+            if (rails.fire(element, 'ajax:beforeSend', [xhr, settings])) {
+              element.trigger('ajax:send', xhr);
+            } else {
+              return false;
+            }
+          },
+          success: function(data, status, xhr) {
+            element.trigger('ajax:success', [data, status, xhr]);
+          },
+          complete: function(xhr, status) {
+            element.trigger('ajax:complete', [xhr, status]);
+          },
+          error: function(xhr, status, error) {
+            element.trigger('ajax:error', [xhr, status, error]);
+          },
+          crossDomain: rails.isCrossDomain(url)
         };
 
-        $.browser = {
-            mozilla: /mozilla/.test(navigator.userAgent.toLowerCase()) && !/webkit/.test(navigator.userAgent.toLowerCase()),
-            webkit: /webkit/.test(navigator.userAgent.toLowerCase()),
-            opera: /opera/.test(navigator.userAgent.toLowerCase()),
-            msie: /msie/.test(navigator.userAgent.toLowerCase()),
-            android: (navigator.userAgent.toLowerCase().indexOf('mozilla/5.0') > -1 && navigator.userAgent.toLowerCase().indexOf('android ') > -1 && navigator.userAgent.toLowerCase().indexOf('applewebkit') > -1),
-            version: uaMatch(navigator.userAgent)
+        // There is no withCredentials for IE6-8 when
+        // "Enable native XMLHTTP support" is disabled
+        if (withCredentials) {
+          options.xhrFields = {
+            withCredentials: withCredentials
+          };
+        }
+
+        // Only pass url to `ajax` options if not blank
+        if (url) { options.url = url; }
+
+        return rails.ajax(options);
+      } else {
+        return false;
+      }
+    },
+
+    // Determines if the request is a cross domain request.
+    isCrossDomain: function(url) {
+      var originAnchor = document.createElement('a');
+      originAnchor.href = location.href;
+      var urlAnchor = document.createElement('a');
+
+      try {
+        urlAnchor.href = url;
+        // This is a workaround to a IE bug.
+        urlAnchor.href = urlAnchor.href;
+
+        // If URL protocol is false or is a string containing a single colon
+        // *and* host are false, assume it is not a cross-domain request
+        // (should only be the case for IE7 and IE compatibility mode).
+        // Otherwise, evaluate protocol and host of the URL against the origin
+        // protocol and host.
+        return !(((!urlAnchor.protocol || urlAnchor.protocol === ':') && !urlAnchor.host) ||
+          (originAnchor.protocol + '//' + originAnchor.host ===
+            urlAnchor.protocol + '//' + urlAnchor.host));
+      } catch (e) {
+        // If there is an error parsing the URL, assume it is crossDomain.
+        return true;
+      }
+    },
+
+    // Handles "data-method" on links such as:
+    // <a href="/users/5" data-method="delete" rel="nofollow" data-confirm="Are you sure?">Delete</a>
+    handleMethod: function(link) {
+      var href = rails.href(link),
+        method = link.data('method'),
+        target = link.attr('target'),
+        csrfToken = rails.csrfToken(),
+        csrfParam = rails.csrfParam(),
+        form = $('<form method="post" action="' + href + '"></form>'),
+        metadataInput = '<input name="_method" value="' + method + '" type="hidden" />';
+
+      if (csrfParam !== undefined && csrfToken !== undefined && !rails.isCrossDomain(href)) {
+        metadataInput += '<input name="' + csrfParam + '" value="' + csrfToken + '" type="hidden" />';
+      }
+
+      if (target) { form.attr('target', target); }
+
+      form.hide().append(metadataInput).appendTo('body');
+      form.submit();
+    },
+
+    // Helper function that returns form elements that match the specified CSS selector
+    // If form is actually a "form" element this will return associated elements outside the from that have
+    // the html form attribute set
+    formElements: function(form, selector) {
+      return form.is('form') ? $(form[0].elements).filter(selector) : form.find(selector);
+    },
+
+    /* Disables form elements:
+      - Caches element value in 'ujs:enable-with' data store
+      - Replaces element text with value of 'data-disable-with' attribute
+      - Sets disabled property to true
+    */
+    disableFormElements: function(form) {
+      rails.formElements(form, rails.disableSelector).each(function() {
+        rails.disableFormElement($(this));
+      });
+    },
+
+    disableFormElement: function(element) {
+      var method, replacement;
+
+      method = element.is('button') ? 'html' : 'val';
+      replacement = element.data('disable-with');
+
+      if (replacement !== undefined) {
+        element.data('ujs:enable-with', element[method]());
+        element[method](replacement);
+      }
+
+      element.prop('disabled', true);
+      element.data('ujs:disabled', true);
+    },
+
+    /* Re-enables disabled form elements:
+      - Replaces element text with cached value from 'ujs:enable-with' data store (created in `disableFormElements`)
+      - Sets disabled property to false
+    */
+    enableFormElements: function(form) {
+      rails.formElements(form, rails.enableSelector).each(function() {
+        rails.enableFormElement($(this));
+      });
+    },
+
+    enableFormElement: function(element) {
+      var method = element.is('button') ? 'html' : 'val';
+      if (element.data('ujs:enable-with') !== undefined) {
+        element[method](element.data('ujs:enable-with'));
+        element.removeData('ujs:enable-with'); // clean up cache
+      }
+      element.prop('disabled', false);
+      element.removeData('ujs:disabled');
+    },
+
+   /* For 'data-confirm' attribute:
+      - Fires `confirm` event
+      - Shows the confirmation dialog
+      - Fires the `confirm:complete` event
+
+      Returns `true` if no function stops the chain and user chose yes; `false` otherwise.
+      Attaching a handler to the element's `confirm` event that returns a `falsy` value cancels the confirmation dialog.
+      Attaching a handler to the element's `confirm:complete` event that returns a `falsy` value makes this function
+      return false. The `confirm:complete` event is fired whether or not the user answered true or false to the dialog.
+   */
+    allowAction: function(element) {
+      var message = element.data('confirm'),
+          answer = false, callback;
+      if (!message) { return true; }
+
+      if (rails.fire(element, 'confirm')) {
+        try {
+          answer = rails.confirm(message);
+        } catch (e) {
+          (console.error || console.log).call(console, e.stack || e);
+        }
+        callback = rails.fire(element, 'confirm:complete', [answer]);
+      }
+      return answer && callback;
+    },
+
+    // Helper function which checks for blank inputs in a form that match the specified CSS selector
+    blankInputs: function(form, specifiedSelector, nonBlank) {
+      var inputs = $(), input, valueToCheck,
+          selector = specifiedSelector || 'input,textarea',
+          allInputs = form.find(selector);
+
+      allInputs.each(function() {
+        input = $(this);
+        valueToCheck = input.is('input[type=checkbox],input[type=radio]') ? input.is(':checked') : !!input.val();
+        if (valueToCheck === nonBlank) {
+
+          // Don't count unchecked required radio if other radio with same name is checked
+          if (input.is('input[type=radio]') && allInputs.filter('input[type=radio]:checked[name="' + input.attr('name') + '"]').length) {
+            return true; // Skip to next input
+          }
+
+          inputs = inputs.add(input);
+        }
+      });
+      return inputs.length ? inputs : false;
+    },
+
+    // Helper function which checks for non-blank inputs in a form that match the specified CSS selector
+    nonBlankInputs: function(form, specifiedSelector) {
+      return rails.blankInputs(form, specifiedSelector, true); // true specifies nonBlank
+    },
+
+    // Helper function, needed to provide consistent behavior in IE
+    stopEverything: function(e) {
+      $(e.target).trigger('ujs:everythingStopped');
+      e.stopImmediatePropagation();
+      return false;
+    },
+
+    //  Replace element's html with the 'data-disable-with' after storing original html
+    //  and prevent clicking on it
+    disableElement: function(element) {
+      var replacement = element.data('disable-with');
+
+      if (replacement !== undefined) {
+        element.data('ujs:enable-with', element.html()); // store enabled state
+        element.html(replacement);
+      }
+
+      element.bind('click.railsDisable', function(e) { // prevent further clicking
+        return rails.stopEverything(e);
+      });
+      element.data('ujs:disabled', true);
+    },
+
+    // Restore element to its original state which was disabled by 'disableElement' above
+    enableElement: function(element) {
+      if (element.data('ujs:enable-with') !== undefined) {
+        element.html(element.data('ujs:enable-with')); // set to old enabled state
+        element.removeData('ujs:enable-with'); // clean up cache
+      }
+      element.unbind('click.railsDisable'); // enable element
+      element.removeData('ujs:disabled');
+    }
+  };
+
+  if (rails.fire($document, 'rails:attachBindings')) {
+
+    $.ajaxPrefilter(function(options, originalOptions, xhr){ if ( !options.crossDomain ) { rails.CSRFProtection(xhr); }});
+
+    // This event works the same as the load event, except that it fires every
+    // time the page is loaded.
+    //
+    // See https://github.com/rails/jquery-ujs/issues/357
+    // See https://developer.mozilla.org/en-US/docs/Using_Firefox_1.5_caching
+    $(window).on('pageshow.rails', function () {
+      $($.rails.enableSelector).each(function () {
+        var element = $(this);
+
+        if (element.data('ujs:disabled')) {
+          $.rails.enableFormElement(element);
+        }
+      });
+
+      $($.rails.linkDisableSelector).each(function () {
+        var element = $(this);
+
+        if (element.data('ujs:disabled')) {
+          $.rails.enableElement(element);
+        }
+      });
+    });
+
+    $document.delegate(rails.linkDisableSelector, 'ajax:complete', function() {
+        rails.enableElement($(this));
+    });
+
+    $document.delegate(rails.buttonDisableSelector, 'ajax:complete', function() {
+        rails.enableFormElement($(this));
+    });
+
+    $document.delegate(rails.linkClickSelector, 'click.rails', function(e) {
+      var link = $(this), method = link.data('method'), data = link.data('params'), metaClick = e.metaKey || e.ctrlKey;
+      if (!rails.allowAction(link)) return rails.stopEverything(e);
+
+      if (!metaClick && link.is(rails.linkDisableSelector)) rails.disableElement(link);
+
+      if (rails.isRemote(link)) {
+        if (metaClick && (!method || method === 'GET') && !data) { return true; }
+
+        var handleRemote = rails.handleRemote(link);
+        // Response from rails.handleRemote() will either be false or a deferred object promise.
+        if (handleRemote === false) {
+          rails.enableElement(link);
+        } else {
+          handleRemote.fail( function() { rails.enableElement(link); } );
+        }
+        return false;
+
+      } else if (method) {
+        rails.handleMethod(link);
+        return false;
+      }
+    });
+
+    $document.delegate(rails.buttonClickSelector, 'click.rails', function(e) {
+      var button = $(this);
+
+      if (!rails.allowAction(button) || !rails.isRemote(button)) return rails.stopEverything(e);
+
+      if (button.is(rails.buttonDisableSelector)) rails.disableFormElement(button);
+
+      var handleRemote = rails.handleRemote(button);
+      // Response from rails.handleRemote() will either be false or a deferred object promise.
+      if (handleRemote === false) {
+        rails.enableFormElement(button);
+      } else {
+        handleRemote.fail( function() { rails.enableFormElement(button); } );
+      }
+      return false;
+    });
+
+    $document.delegate(rails.inputChangeSelector, 'change.rails', function(e) {
+      var link = $(this);
+      if (!rails.allowAction(link) || !rails.isRemote(link)) return rails.stopEverything(e);
+
+      rails.handleRemote(link);
+      return false;
+    });
+
+    $document.delegate(rails.formSubmitSelector, 'submit.rails', function(e) {
+      var form = $(this),
+        remote = rails.isRemote(form),
+        blankRequiredInputs,
+        nonBlankFileInputs;
+
+      if (!rails.allowAction(form)) return rails.stopEverything(e);
+
+      // Skip other logic when required values are missing or file upload is present
+      if (form.attr('novalidate') === undefined) {
+        if (form.data('ujs:formnovalidate-button') === undefined) {
+          blankRequiredInputs = rails.blankInputs(form, rails.requiredInputSelector, false);
+          if (blankRequiredInputs && rails.fire(form, 'ajax:aborted:required', [blankRequiredInputs])) {
+            return rails.stopEverything(e);
+          }
+        } else {
+          // Clear the formnovalidate in case the next button click is not on a formnovalidate button
+          // Not strictly necessary to do here, since it is also reset on each button click, but just to be certain
+          form.data('ujs:formnovalidate-button', undefined);
+        }
+      }
+
+      if (remote) {
+        nonBlankFileInputs = rails.nonBlankInputs(form, rails.fileInputSelector);
+        if (nonBlankFileInputs) {
+          // Slight timeout so that the submit button gets properly serialized
+          // (make it easy for event handler to serialize form without disabled values)
+          setTimeout(function(){ rails.disableFormElements(form); }, 13);
+          var aborted = rails.fire(form, 'ajax:aborted:file', [nonBlankFileInputs]);
+
+          // Re-enable form elements if event bindings return false (canceling normal form submission)
+          if (!aborted) { setTimeout(function(){ rails.enableFormElements(form); }, 13); }
+
+          return aborted;
+        }
+
+        rails.handleRemote(form);
+        return false;
+
+      } else {
+        // Slight timeout so that the submit button gets properly serialized
+        setTimeout(function(){ rails.disableFormElements(form); }, 13);
+      }
+    });
+
+    $document.delegate(rails.formInputClickSelector, 'click.rails', function(event) {
+      var button = $(this);
+
+      if (!rails.allowAction(button)) return rails.stopEverything(event);
+
+      // Register the pressed submit button
+      var name = button.attr('name'),
+        data = name ? {name:name, value:button.val()} : null;
+
+      var form = button.closest('form');
+      if (form.length === 0) {
+        form = $('#' + button.attr('form'));
+      }
+      form.data('ujs:submit-button', data);
+
+      // Save attributes from button
+      form.data('ujs:formnovalidate-button', button.attr('formnovalidate'));
+      form.data('ujs:submit-button-formaction', button.attr('formaction'));
+      form.data('ujs:submit-button-formmethod', button.attr('formmethod'));
+    });
+
+    $document.delegate(rails.formSubmitSelector, 'ajax:send.rails', function(event) {
+      if (this === event.target) rails.disableFormElements($(this));
+    });
+
+    $document.delegate(rails.formSubmitSelector, 'ajax:complete.rails', function(event) {
+      if (this === event.target) rails.enableFormElements($(this));
+    });
+
+    $(function(){
+      rails.refreshCSRFTokens();
+    });
+  }
+
+})( jQuery );
+(function() {
+  var CSRFToken, Click, ComponentUrl, EVENTS, Link, ProgressBar, browserIsntBuggy, browserSupportsCustomEvents, browserSupportsPushState, browserSupportsTurbolinks, bypassOnLoadPopstate, cacheCurrentPage, cacheSize, changePage, clone, constrainPageCacheTo, createDocument, crossOriginRedirect, currentState, enableProgressBar, enableTransitionCache, executeScriptTags, extractTitleAndBody, fetch, fetchHistory, fetchReplacement, historyStateIsDefined, initializeTurbolinks, installDocumentReadyPageEventTriggers, installHistoryChangeHandler, installJqueryAjaxSuccessPageUpdateTrigger, loadedAssets, manuallyTriggerHashChangeForFirefox, pageCache, pageChangePrevented, pagesCached, popCookie, processResponse, progressBar, recallScrollPosition, ref, referer, reflectNewUrl, reflectRedirectedUrl, rememberCurrentState, rememberCurrentUrl, rememberReferer, removeNoscriptTags, requestMethodIsSafe, resetScrollPosition, setAutofocusElement, transitionCacheEnabled, transitionCacheFor, triggerEvent, visit, xhr,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty,
+    slice = [].slice,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  pageCache = {};
+
+  cacheSize = 10;
+
+  transitionCacheEnabled = false;
+
+  progressBar = null;
+
+  currentState = null;
+
+  loadedAssets = null;
+
+  referer = null;
+
+  xhr = null;
+
+  EVENTS = {
+    BEFORE_CHANGE: 'page:before-change',
+    FETCH: 'page:fetch',
+    RECEIVE: 'page:receive',
+    CHANGE: 'page:change',
+    UPDATE: 'page:update',
+    LOAD: 'page:load',
+    RESTORE: 'page:restore',
+    BEFORE_UNLOAD: 'page:before-unload',
+    EXPIRE: 'page:expire'
+  };
+
+  fetch = function(url) {
+    var cachedPage;
+    url = new ComponentUrl(url);
+    rememberReferer();
+    cacheCurrentPage();
+    if (progressBar != null) {
+      progressBar.start();
+    }
+    if (transitionCacheEnabled && (cachedPage = transitionCacheFor(url.absolute))) {
+      fetchHistory(cachedPage);
+      return fetchReplacement(url, null, false);
+    } else {
+      return fetchReplacement(url, resetScrollPosition);
+    }
+  };
+
+  transitionCacheFor = function(url) {
+    var cachedPage;
+    cachedPage = pageCache[url];
+    if (cachedPage && !cachedPage.transitionCacheDisabled) {
+      return cachedPage;
+    }
+  };
+
+  enableTransitionCache = function(enable) {
+    if (enable == null) {
+      enable = true;
+    }
+    return transitionCacheEnabled = enable;
+  };
+
+  enableProgressBar = function(enable) {
+    if (enable == null) {
+      enable = true;
+    }
+    if (!browserSupportsTurbolinks) {
+      return;
+    }
+    if (enable) {
+      return progressBar != null ? progressBar : progressBar = new ProgressBar('html');
+    } else {
+      if (progressBar != null) {
+        progressBar.uninstall();
+      }
+      return progressBar = null;
+    }
+  };
+
+  fetchReplacement = function(url, onLoadFunction, showProgressBar) {
+    if (showProgressBar == null) {
+      showProgressBar = true;
+    }
+    triggerEvent(EVENTS.FETCH, {
+      url: url.absolute
+    });
+    if (xhr != null) {
+      xhr.abort();
+    }
+    xhr = new XMLHttpRequest;
+    xhr.open('GET', url.withoutHashForIE10compatibility(), true);
+    xhr.setRequestHeader('Accept', 'text/html, application/xhtml+xml, application/xml');
+    xhr.setRequestHeader('X-XHR-Referer', referer);
+    xhr.onload = function() {
+      var doc;
+      triggerEvent(EVENTS.RECEIVE, {
+        url: url.absolute
+      });
+      if (doc = processResponse()) {
+        reflectNewUrl(url);
+        reflectRedirectedUrl();
+        changePage.apply(null, extractTitleAndBody(doc));
+        manuallyTriggerHashChangeForFirefox();
+        if (typeof onLoadFunction === "function") {
+          onLoadFunction();
+        }
+        return triggerEvent(EVENTS.LOAD);
+      } else {
+        return document.location.href = crossOriginRedirect() || url.absolute;
+      }
+    };
+    if (progressBar && showProgressBar) {
+      xhr.onprogress = (function(_this) {
+        return function(event) {
+          var percent;
+          percent = event.lengthComputable ? event.loaded / event.total * 100 : progressBar.value + (100 - progressBar.value) / 10;
+          return progressBar.advanceTo(percent);
         };
+      })(this);
+    }
+    xhr.onloadend = function() {
+      return xhr = null;
+    };
+    xhr.onerror = function() {
+      return document.location.href = url.absolute;
+    };
+    return xhr.send();
+  };
+
+  fetchHistory = function(cachedPage) {
+    if (xhr != null) {
+      xhr.abort();
+    }
+    changePage(cachedPage.title, cachedPage.body);
+    recallScrollPosition(cachedPage);
+    return triggerEvent(EVENTS.RESTORE);
+  };
+
+  cacheCurrentPage = function() {
+    var currentStateUrl;
+    currentStateUrl = new ComponentUrl(currentState.url);
+    pageCache[currentStateUrl.absolute] = {
+      url: currentStateUrl.relative,
+      body: document.body,
+      title: document.title,
+      positionY: window.pageYOffset,
+      positionX: window.pageXOffset,
+      cachedAt: new Date().getTime(),
+      transitionCacheDisabled: document.querySelector('[data-no-transition-cache]') != null
+    };
+    return constrainPageCacheTo(cacheSize);
+  };
+
+  pagesCached = function(size) {
+    if (size == null) {
+      size = cacheSize;
+    }
+    if (/^[\d]+$/.test(size)) {
+      return cacheSize = parseInt(size);
+    }
+  };
+
+  constrainPageCacheTo = function(limit) {
+    var cacheTimesRecentFirst, i, key, len, pageCacheKeys, results;
+    pageCacheKeys = Object.keys(pageCache);
+    cacheTimesRecentFirst = pageCacheKeys.map(function(url) {
+      return pageCache[url].cachedAt;
+    }).sort(function(a, b) {
+      return b - a;
+    });
+    results = [];
+    for (i = 0, len = pageCacheKeys.length; i < len; i++) {
+      key = pageCacheKeys[i];
+      if (!(pageCache[key].cachedAt <= cacheTimesRecentFirst[limit])) {
+        continue;
+      }
+      triggerEvent(EVENTS.EXPIRE, pageCache[key]);
+      results.push(delete pageCache[key]);
+    }
+    return results;
+  };
+
+  changePage = function(title, body, csrfToken, runScripts) {
+    triggerEvent(EVENTS.BEFORE_UNLOAD);
+    document.title = title;
+    document.documentElement.replaceChild(body, document.body);
+    if (csrfToken != null) {
+      CSRFToken.update(csrfToken);
+    }
+    setAutofocusElement();
+    if (runScripts) {
+      executeScriptTags();
+    }
+    currentState = window.history.state;
+    if (progressBar != null) {
+      progressBar.done();
+    }
+    triggerEvent(EVENTS.CHANGE);
+    return triggerEvent(EVENTS.UPDATE);
+  };
+
+  executeScriptTags = function() {
+    var attr, copy, i, j, len, len1, nextSibling, parentNode, ref, ref1, script, scripts;
+    scripts = Array.prototype.slice.call(document.body.querySelectorAll('script:not([data-turbolinks-eval="false"])'));
+    for (i = 0, len = scripts.length; i < len; i++) {
+      script = scripts[i];
+      if (!((ref = script.type) === '' || ref === 'text/javascript')) {
+        continue;
+      }
+      copy = document.createElement('script');
+      ref1 = script.attributes;
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        attr = ref1[j];
+        copy.setAttribute(attr.name, attr.value);
+      }
+      if (!script.hasAttribute('async')) {
+        copy.async = false;
+      }
+      copy.appendChild(document.createTextNode(script.innerHTML));
+      parentNode = script.parentNode, nextSibling = script.nextSibling;
+      parentNode.removeChild(script);
+      parentNode.insertBefore(copy, nextSibling);
+    }
+  };
+
+  removeNoscriptTags = function(node) {
+    node.innerHTML = node.innerHTML.replace(/<noscript[\S\s]*?<\/noscript>/ig, '');
+    return node;
+  };
+
+  setAutofocusElement = function() {
+    var autofocusElement, list;
+    autofocusElement = (list = document.querySelectorAll('input[autofocus], textarea[autofocus]'))[list.length - 1];
+    if (autofocusElement && document.activeElement !== autofocusElement) {
+      return autofocusElement.focus();
+    }
+  };
+
+  reflectNewUrl = function(url) {
+    if ((url = new ComponentUrl(url)).absolute !== referer) {
+      return window.history.pushState({
+        turbolinks: true,
+        url: url.absolute
+      }, '', url.absolute);
+    }
+  };
+
+  reflectRedirectedUrl = function() {
+    var location, preservedHash;
+    if (location = xhr.getResponseHeader('X-XHR-Redirected-To')) {
+      location = new ComponentUrl(location);
+      preservedHash = location.hasNoHash() ? document.location.hash : '';
+      return window.history.replaceState(window.history.state, '', location.href + preservedHash);
+    }
+  };
+
+  crossOriginRedirect = function() {
+    var redirect;
+    if (((redirect = xhr.getResponseHeader('Location')) != null) && (new ComponentUrl(redirect)).crossOrigin()) {
+      return redirect;
+    }
+  };
+
+  rememberReferer = function() {
+    return referer = document.location.href;
+  };
+
+  rememberCurrentUrl = function() {
+    return window.history.replaceState({
+      turbolinks: true,
+      url: document.location.href
+    }, '', document.location.href);
+  };
+
+  rememberCurrentState = function() {
+    return currentState = window.history.state;
+  };
+
+  manuallyTriggerHashChangeForFirefox = function() {
+    var url;
+    if (navigator.userAgent.match(/Firefox/) && !(url = new ComponentUrl).hasNoHash()) {
+      window.history.replaceState(currentState, '', url.withoutHash());
+      return document.location.hash = url.hash;
+    }
+  };
+
+  recallScrollPosition = function(page) {
+    return window.scrollTo(page.positionX, page.positionY);
+  };
+
+  resetScrollPosition = function() {
+    if (document.location.hash) {
+      return document.location.href = document.location.href;
+    } else {
+      return window.scrollTo(0, 0);
+    }
+  };
+
+  clone = function(original) {
+    var copy, key, value;
+    if ((original == null) || typeof original !== 'object') {
+      return original;
+    }
+    copy = new original.constructor();
+    for (key in original) {
+      value = original[key];
+      copy[key] = clone(value);
+    }
+    return copy;
+  };
+
+  popCookie = function(name) {
+    var ref, value;
+    value = ((ref = document.cookie.match(new RegExp(name + "=(\\w+)"))) != null ? ref[1].toUpperCase() : void 0) || '';
+    document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/';
+    return value;
+  };
+
+  triggerEvent = function(name, data) {
+    var event;
+    if (typeof Prototype !== 'undefined') {
+      Event.fire(document, name, data, true);
+    }
+    event = document.createEvent('Events');
+    if (data) {
+      event.data = data;
+    }
+    event.initEvent(name, true, true);
+    return document.dispatchEvent(event);
+  };
+
+  pageChangePrevented = function(url) {
+    return !triggerEvent(EVENTS.BEFORE_CHANGE, {
+      url: url
+    });
+  };
+
+  processResponse = function() {
+    var assetsChanged, clientOrServerError, doc, extractTrackAssets, intersection, validContent;
+    clientOrServerError = function() {
+      var ref;
+      return (400 <= (ref = xhr.status) && ref < 600);
+    };
+    validContent = function() {
+      var contentType;
+      return ((contentType = xhr.getResponseHeader('Content-Type')) != null) && contentType.match(/^(?:text\/html|application\/xhtml\+xml|application\/xml)(?:;|$)/);
+    };
+    extractTrackAssets = function(doc) {
+      var i, len, node, ref, results;
+      ref = doc.querySelector('head').childNodes;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        node = ref[i];
+        if ((typeof node.getAttribute === "function" ? node.getAttribute('data-turbolinks-track') : void 0) != null) {
+          results.push(node.getAttribute('src') || node.getAttribute('href'));
+        }
+      }
+      return results;
+    };
+    assetsChanged = function(doc) {
+      var fetchedAssets;
+      loadedAssets || (loadedAssets = extractTrackAssets(document));
+      fetchedAssets = extractTrackAssets(doc);
+      return fetchedAssets.length !== loadedAssets.length || intersection(fetchedAssets, loadedAssets).length !== loadedAssets.length;
+    };
+    intersection = function(a, b) {
+      var i, len, ref, results, value;
+      if (a.length > b.length) {
+        ref = [b, a], a = ref[0], b = ref[1];
+      }
+      results = [];
+      for (i = 0, len = a.length; i < len; i++) {
+        value = a[i];
+        if (indexOf.call(b, value) >= 0) {
+          results.push(value);
+        }
+      }
+      return results;
+    };
+    if (!clientOrServerError() && validContent()) {
+      doc = createDocument(xhr.responseText);
+      if (doc && !assetsChanged(doc)) {
+        return doc;
+      }
+    }
+  };
+
+  extractTitleAndBody = function(doc) {
+    var title;
+    title = doc.querySelector('title');
+    return [title != null ? title.textContent : void 0, removeNoscriptTags(doc.querySelector('body')), CSRFToken.get(doc).token, 'runScripts'];
+  };
+
+  CSRFToken = {
+    get: function(doc) {
+      var tag;
+      if (doc == null) {
+        doc = document;
+      }
+      return {
+        node: tag = doc.querySelector('meta[name="csrf-token"]'),
+        token: tag != null ? typeof tag.getAttribute === "function" ? tag.getAttribute('content') : void 0 : void 0
+      };
+    },
+    update: function(latest) {
+      var current;
+      current = this.get();
+      if ((current.token != null) && (latest != null) && current.token !== latest) {
+        return current.node.setAttribute('content', latest);
+      }
+    }
+  };
+
+  createDocument = function(html) {
+    var doc;
+    doc = document.documentElement.cloneNode();
+    doc.innerHTML = html;
+    doc.head = doc.querySelector('head');
+    doc.body = doc.querySelector('body');
+    return doc;
+  };
+
+  ComponentUrl = (function() {
+    function ComponentUrl(original1) {
+      this.original = original1 != null ? original1 : document.location.href;
+      if (this.original.constructor === ComponentUrl) {
+        return this.original;
+      }
+      this._parse();
     }
 
-    var isMobile = (window.orientation != null);
-
-    // browsers like firefox2 and before and opera doesnt have the onPaste event, but the paste feature can be done with the onInput event.
-    var pasteEvent = (($.browser.opera || ($.browser.mozilla && parseFloat($.browser.version.substr(0, 3)) < 1.9)) ? 'input' : 'paste');
-
-    // the timeout is set because we can't get the value from the input without it
-    var pasteHandler = function(e) {
-        e = $.event.fix(e || window.event);
-        e.type = 'paste';
-        var el = e.target;
-
-        setTimeout(function() {
-            $.event.dispatch.call(el, e);
-        }, 1);
+    ComponentUrl.prototype.withoutHash = function() {
+      return this.href.replace(this.hash, '').replace('#', '');
     };
 
-    $.event.special.paste = {
-        setup: function() {
-            if (this.addEventListener) this.addEventListener(pasteEvent, pasteHandler, false);
-            else if (this.attachEvent) this.attachEvent('on' + pasteEvent, pasteHandler);
-        },
+    ComponentUrl.prototype.withoutHashForIE10compatibility = function() {
+      return this.withoutHash();
+    };
 
-        teardown: function() {
-            if (this.removeEventListener) this.removeEventListener(pasteEvent, pasteHandler, false);
-            else if (this.detachEvent) this.detachEvent('on' + pasteEvent, pasteHandler);
+    ComponentUrl.prototype.hasNoHash = function() {
+      return this.hash.length === 0;
+    };
+
+    ComponentUrl.prototype.crossOrigin = function() {
+      return this.origin !== (new ComponentUrl).origin;
+    };
+
+    ComponentUrl.prototype._parse = function() {
+      var ref;
+      (this.link != null ? this.link : this.link = document.createElement('a')).href = this.original;
+      ref = this.link, this.href = ref.href, this.protocol = ref.protocol, this.host = ref.host, this.hostname = ref.hostname, this.port = ref.port, this.pathname = ref.pathname, this.search = ref.search, this.hash = ref.hash;
+      this.origin = [this.protocol, '//', this.hostname].join('');
+      if (this.port.length !== 0) {
+        this.origin += ":" + this.port;
+      }
+      this.relative = [this.pathname, this.search, this.hash].join('');
+      return this.absolute = this.href;
+    };
+
+    return ComponentUrl;
+
+  })();
+
+  Link = (function(superClass) {
+    extend(Link, superClass);
+
+    Link.HTML_EXTENSIONS = ['html'];
+
+    Link.allowExtensions = function() {
+      var extension, extensions, i, len;
+      extensions = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      for (i = 0, len = extensions.length; i < len; i++) {
+        extension = extensions[i];
+        Link.HTML_EXTENSIONS.push(extension);
+      }
+      return Link.HTML_EXTENSIONS;
+    };
+
+    function Link(link1) {
+      this.link = link1;
+      if (this.link.constructor === Link) {
+        return this.link;
+      }
+      this.original = this.link.href;
+      this.originalElement = this.link;
+      this.link = this.link.cloneNode(false);
+      Link.__super__.constructor.apply(this, arguments);
+    }
+
+    Link.prototype.shouldIgnore = function() {
+      return this.crossOrigin() || this._anchored() || this._nonHtml() || this._optOut() || this._target();
+    };
+
+    Link.prototype._anchored = function() {
+      return (this.hash.length > 0 || this.href.charAt(this.href.length - 1) === '#') && (this.withoutHash() === (new ComponentUrl).withoutHash());
+    };
+
+    Link.prototype._nonHtml = function() {
+      return this.pathname.match(/\.[a-z]+$/g) && !this.pathname.match(new RegExp("\\.(?:" + (Link.HTML_EXTENSIONS.join('|')) + ")?$", 'g'));
+    };
+
+    Link.prototype._optOut = function() {
+      var ignore, link;
+      link = this.originalElement;
+      while (!(ignore || link === document)) {
+        ignore = link.getAttribute('data-no-turbolink') != null;
+        link = link.parentNode;
+      }
+      return ignore;
+    };
+
+    Link.prototype._target = function() {
+      return this.link.target.length !== 0;
+    };
+
+    return Link;
+
+  })(ComponentUrl);
+
+  Click = (function() {
+    Click.installHandlerLast = function(event) {
+      if (!event.defaultPrevented) {
+        document.removeEventListener('click', Click.handle, false);
+        return document.addEventListener('click', Click.handle, false);
+      }
+    };
+
+    Click.handle = function(event) {
+      return new Click(event);
+    };
+
+    function Click(event1) {
+      this.event = event1;
+      if (this.event.defaultPrevented) {
+        return;
+      }
+      this._extractLink();
+      if (this._validForTurbolinks()) {
+        if (!pageChangePrevented(this.link.absolute)) {
+          visit(this.link.href);
         }
+        this.event.preventDefault();
+      }
+    }
+
+    Click.prototype._extractLink = function() {
+      var link;
+      link = this.event.target;
+      while (!(!link.parentNode || link.nodeName === 'A')) {
+        link = link.parentNode;
+      }
+      if (link.nodeName === 'A' && link.href.length !== 0) {
+        return this.link = new Link(link);
+      }
     };
 
-    $.extend({
-        mask: {
-
-            // the mask rules. You may add yours!
-            // number rules will be overwritten
-            rules: {
-                'z': /[a-z]/,
-                'Z': /[A-Z]/,
-                'a': /[a-zA-Z]/,
-                '*': /[0-9a-zA-Z]/,
-                '@': /[0-9a-zA-ZçÇáàãâéèêíìóòôõúùü]/
-            },
-
-            // these keys will be ignored by the mask.
-            // all these numbers where obtained on the keydown event
-            keyRepresentation: {
-                8: 'backspace',
-                9: 'tab',
-                13: 'enter',
-                16: 'shift',
-                17: 'control',
-                18: 'alt',
-                27: 'esc',
-                33: 'page up',
-                34: 'page down',
-                35: 'end',
-                36: 'home',
-                37: 'left',
-                38: 'up',
-                39: 'right',
-                40: 'down',
-                45: 'insert',
-                46: 'delete',
-                116: 'f5',
-                123: 'f12',
-                224: 'command'
-            },
-
-            signals: {
-                '+': '',
-                '-': '-'
-            },
-
-            // default settings for the plugin
-            options: {
-                attr: 'alt', // an attr to look for the mask name or the mask itself
-                mask: null, // the mask to be used on the input
-                type: 'fixed', // the mask of this mask
-                maxLength: -1, // the maxLength of the mask
-                defaultValue: '', // the default value for this input
-                signal: false, // this should not be set, to use signal at masks put the signal you want ('-' or '+') at the default value of this mask.
-                // See the defined masks for a better understanding.
-
-                textAlign: true, // use false to not use text-align on any mask (at least not by the plugin, you may apply it using css)
-                selectCharsOnFocus: true, // select all chars from input on its focus
-                autoTab: true, // auto focus the next form element when you type the mask completely
-                setSize: false, // sets the input size based on the length of the mask (work with fixed and reverse masks only)
-                fixedChars: '[(),.:/ -]', // fixed chars to be used on the masks. You may change it for your needs!
-
-                onInvalid: function() {},
-                onValid: function() {},
-                onOverflow: function() {},
-                onFocus: function(input, evt) {},
-                onBlur: function(input, evt) {}
-            },
-
-            // masks. You may add yours!
-            // Ex: $.fn.setMask.masks.msk = {mask: '999'}
-            // and then if the 'attr' options value is 'alt', your input should look like:
-            // <input type="text" name="some_name" id="some_name" alt="msk" />
-            masks: {
-                'phone': {
-                    mask: '(99) 9999-9999'
-                },
-                'phone-us': {
-                    mask: '(999) 999-9999'
-                },
-                'cpf': {
-                    mask: '999.999.999-99'
-                }, // cadastro nacional de pessoa fisica (kind of a brazillian ssn)
-                'cnpj': {
-                    mask: '99.999.999/9999-99'
-                },
-                'date': {
-                    mask: '39/19/9999'
-                }, // uk date
-                'date-us': {
-                    mask: '19/39/9999'
-                },
-                'cep': {
-                    mask: '99999-999'
-                },
-                'time': {
-                    mask: '29:59'
-                },
-                'cc': {
-                    mask: '9999 9999 9999 9999'
-                }, // credit card
-                'integer': {
-                    mask: '999.999.999.999',
-                    type: 'reverse'
-                },
-                'decimal': {
-                    mask: '99,999.999.999.999',
-                    type: 'reverse',
-                    defaultValue: '000'
-                },
-                'decimal-us': {
-                    mask: '99.999,999,999,999',
-                    type: 'reverse',
-                    defaultValue: '000'
-                },
-                'signed-decimal': {
-                    mask: '99,999.999.999.999',
-                    type: 'reverse',
-                    defaultValue: '+000'
-                },
-                'signed-decimal-us': {
-                    mask: '99,999.999.999.999',
-                    type: 'reverse',
-                    defaultValue: '+000'
-                }
-            },
-
-            init: function() {
-                // if has not inited...
-                if (!this.hasInit) {
-
-                    var self = this,
-                        i,
-                        keyRep = this.keyRepresentation;
-
-                    this.ignore = false;
-
-                    // constructs number rules
-                    for (i = 0; i <= 9; i++) this.rules[i] = new RegExp('[0-' + i + ']');
-
-                    this.keyRep = keyRep;
-                    // ignore keys array creation for iphone or the normal ones
-                    this.ignoreKeys = [];
-                    $.each(keyRep, function(key) {
-                        self.ignoreKeys.push(parseInt(key, 10));
-                    });
-
-                    this.hasInit = true;
-                }
-            },
-
-            set: function(el, options) {
-
-                var maskObj = this,
-                    $el = $(el),
-                    mlStr = 'maxLength';
-
-                options = options || {};
-                this.init();
-
-                return $el.each(function() {
-
-                    if (options.attr) maskObj.options.attr = options.attr;
-
-                    var $this = $(this),
-                        o = $.extend({}, maskObj.options),
-                        attrValue = $this.attr(o.attr),
-                        tmpMask = '';
-
-                    // then we look for the 'attr' option
-                    tmpMask = (typeof options == 'string') ? options : (attrValue !== '') ? attrValue : null;
-                    if (tmpMask) o.mask = tmpMask;
-
-                    // then we see if it's a defined mask
-                    if (maskObj.masks[tmpMask]) o = $.extend(o, maskObj.masks[tmpMask]);
-
-                    // then it looks if the options is an object, if it is we will overwrite the actual options
-                    if (typeof options == 'object' && options.constructor != Array) o = $.extend(o, options);
-
-                    //then we look for some metadata on the input
-                    if ($.metadata) o = $.extend(o, $this.metadata());
-
-                    if (o.mask != null) {
-
-                        // prevents javascript automatic type convertion
-                        o.mask += '';
-
-                        if ($this.data('mask')) maskObj.unset($this);
-
-                        var defaultValue = o.defaultValue,
-                            reverse = (o.type === 'reverse'),
-                            fixedCharsRegG = new RegExp(o.fixedChars, 'g');
-
-                        if (o.maxLength === -1) o.maxLength = $this.attr(mlStr);
-
-                        o = $.extend({}, o, {
-                            fixedCharsReg: new RegExp(o.fixedChars),
-                            fixedCharsRegG: fixedCharsRegG,
-                            maskArray: o.mask.split(''),
-                            maskNonFixedCharsArray: o.mask.replace(fixedCharsRegG, '').split('')
-                        });
-
-                        // setSize option (this is kept when the mask is removed)
-                        if ((o.type == 'fixed' || reverse) && o.setSize && !$this.attr('size')) $this.attr('size', o.mask.length);
-
-                        // sets text-align right for reverse masks
-                        if (reverse && o.textAlign) $this.css('text-align', 'right');
-
-                        if (this.value !== '' || defaultValue !== '') {
-                            // apply mask to the current value of the input or to the default value
-                            var val = maskObj.string((this.value !== '') ? this.value : defaultValue, o);
-                            //setting defaultValue fixes the reset button from the form
-                            this.defaultValue = val;
-                            $this.val(val);
-                        }
-
-                        // compatibility patch for infinite mask, that is now repeat
-                        if (o.type == 'infinite') o.type = 'repeat';
-
-                        $this.data('mask', o);
-
-                        // removes the maxLength attribute (it will be set again if you use the unset method)
-                        $this.removeAttr(mlStr);
-
-                        // setting the input events
-                        $this.bind('keydown.mask', {
-                            func: maskObj._onKeyDown,
-                            thisObj: maskObj
-                        }, maskObj._onMask)
-                            .bind('keypress.mask', {
-                            func: maskObj._onKeyPress,
-                            thisObj: maskObj
-                        }, maskObj._onMask)
-                            .bind('keyup.mask', {
-                            func: maskObj._onKeyUp,
-                            thisObj: maskObj
-                        }, maskObj._onMask)
-                            .bind('paste.mask', {
-                            func: maskObj._onPaste,
-                            thisObj: maskObj
-                        }, maskObj._onMask)
-                            .bind('drop.mask', {
-                            func: maskObj._onPaste,
-                            thisObj: maskObj
-                        }, maskObj._onMask)
-                            .bind('focus.mask', maskObj._onFocus)
-                            .bind('blur.mask', maskObj._onBlur)
-                            .bind('change.mask', maskObj._onChange);
-                    }
-                });
-            },
-
-            //unsets the mask from el
-            unset: function(el) {
-                var $el = $(el);
-
-                return $el.each(function() {
-                    var $this = $(this);
-                    if ($this.data('mask')) {
-                        var maxLength = $this.data('mask').maxLength;
-                        if (maxLength != -1) $this.attr('maxLength', maxLength);
-                        $this.unbind('.mask')
-                            .removeData('mask');
-                    }
-                });
-            },
-
-            //masks a string
-            string: function(str, options) {
-                this.init();
-                var o = {};
-                if (typeof str != 'string') str = String(str);
-                switch (typeof options) {
-                    case 'string':
-                        // then we see if it's a defined mask
-                        if (this.masks[options]) o = $.extend(o, this.masks[options]);
-                        else o.mask = options;
-                        break;
-                    case 'object':
-                        o = options;
-                }
-                if (!o.fixedChars) o.fixedChars = this.options.fixedChars;
-
-                var fixedCharsReg = new RegExp(o.fixedChars),
-                    fixedCharsRegG = new RegExp(o.fixedChars, 'g');
-
-                // insert signal if any
-                if ((o.type === 'reverse') && o.defaultValue) {
-                    if (typeof this.signals[o.defaultValue.charAt(0)] != 'undefined') {
-                        var maybeASignal = str.charAt(0);
-                        o.signal = (typeof this.signals[maybeASignal] != 'undefined') ? this.signals[maybeASignal] : this.signals[o.defaultValue.charAt(0)];
-                        o.defaultValue = o.defaultValue.substring(1);
-                    }
-                }
-
-                return this.__maskArray(str.split(''),
-                o.mask.replace(fixedCharsRegG, '').split(''),
-                o.mask.split(''),
-                o.type,
-                o.maxLength,
-                o.defaultValue,
-                fixedCharsReg,
-                o.signal);
-            },
-
-            // all the 3 events below are here just to fix the change event on reversed masks.
-            // It isn't fired in cases that the keypress event returns false (needed).
-            _onFocus: function(e) {
-                var $this = $(this),
-                    dataObj = $this.data('mask');
-                dataObj.inputFocusValue = $this.val();
-                dataObj.changed = false;
-                if (dataObj.selectCharsOnFocus) $this.select();
-                // trigger mask function
-                dataObj.onFocus(this, e);
-            },
-
-            _onBlur: function(e) {
-                var $this = $(this),
-                    dataObj = $this.data('mask');
-                if (dataObj.inputFocusValue != $this.val() && !dataObj.changed) $this.trigger('change');
-                // trigger  mask function
-                dataObj.onBlur(this, e);
-            },
-
-            _onChange: function(e) {
-                $(this).data('mask').changed = true;
-            },
-
-            _onMask: function(e) {
-                var thisObj = e.data.thisObj,
-                    o = {};
-
-                o._this = e.target;
-                o.$this = $(o._this);
-                o.data = o.$this.data('mask');
-
-                if (o.$this.attr('readonly') || !o.data) {
-                    return true;
-                }
-
-                o[o.data.type] = true;
-                o.value = o.$this.val();
-                o.nKey = thisObj.__getKeyNumber(e);
-                o.range = thisObj.__getRange(o._this);
-                o.valueArray = o.value.split('');
-                return e.data.func.call(thisObj, e, o);
-            },
-
-            _onKeyDown: function(e, o) {
-                // lets say keypress at desktop == keydown at iphone (theres no keypress at iphone)
-                this.ignore = $.inArray(o.nKey, this.ignoreKeys) > -1 || ((e.ctrlKey || e.metaKey || e.altKey) && e.key);
-                if (this.ignore) {
-                    var rep = this.keyRep[o.nKey];
-                    o.data.onValid.call(o._this, rep || '', o.nKey);
-                }
-                return true;
-            },
-
-            _onKeyUp: function(e, o) {
-                //9=TAB_KEY 16=SHIFT_KEY
-                //this is a little bug, when you go to an input with tab key
-                //it would remove the range selected by default, and that's not a desired behavior
-                if (o.nKey === 9 || o.nKey === 16) return true;
-
-                if (o.repeat) {
-                    this.__autoTab(o);
-                    return true;
-                }
-
-                return this._onPaste(e, o);
-            },
-
-            _onPaste: function(e, o) {
-                // changes the signal at the data obj from the input
-                if (o.reverse) this.__changeSignal(e.type, o);
-
-                var $thisVal = this.__maskArray(
-                o.valueArray,
-                o.data.maskNonFixedCharsArray,
-                o.data.maskArray,
-                o.data.type,
-                o.data.maxLength,
-                o.data.defaultValue,
-                o.data.fixedCharsReg,
-                o.data.signal);
-
-                o.$this.val($thisVal);
-                // this makes the caret stay at first position when
-                // the user removes all values in an input and the plugin adds the default value to it (if it haves one).
-                if (!o.reverse && o.data.defaultValue.length && (o.range.start === o.range.end)) this.__setRange(o._this, o.range.start, o.range.end);
-
-                //fix so ie's and safari's caret won't go to the end of the input value.
-                if (($.browser.msie || $.browser.safari) && !o.reverse) this.__setRange(o._this, o.range.start, o.range.end);
-
-                if (this.ignore) return true;
-
-                this.__autoTab(o);
-                return true;
-            },
-
-            _onKeyPress: function(e, o) {
-
-                if (this.ignore) return true;
-
-                // changes the signal at the data obj from the input
-                if (o.reverse) this.__changeSignal(e.type, o);
-
-                var c = String.fromCharCode(o.nKey),
-                    rangeStart = o.range.start,
-                    rawValue = o.value,
-                    maskArray = o.data.maskArray;
-
-                if (o.reverse) {
-                    // the input value from the range start to the value start
-                    var valueStart = rawValue.substr(0, rangeStart),
-                        // the input value from the range end to the value end
-                        valueEnd = rawValue.substr(o.range.end, rawValue.length);
-
-                    rawValue = valueStart + c + valueEnd;
-                    //necessary, if not decremented you will be able to input just the mask.length-1 if signal!=''
-                    //ex: mask:99,999.999.999 you will be able to input 99,999.999.99
-                    if (o.data.signal && (rangeStart - o.data.signal.length > 0)) {
-                        rangeStart -= o.data.signal.length;
-                    }
-                }
-
-                var valueArray = rawValue.replace(o.data.fixedCharsRegG, '').split(''),
-                    // searches for fixed chars begining from the range start position, till it finds a non fixed
-                    extraPos = this.__extraPositionsTill(rangeStart, maskArray, o.data.fixedCharsReg);
-
-                o.rsEp = rangeStart + extraPos;
-
-                if (o.repeat) {
-                    o.rsEp = 0;
-                }
-
-                // if the rule for this character doesnt exist (value.length is bigger than mask.length)
-                // added a verification for maxLength in the case of the repeat type mask
-                if (!this.rules[maskArray[o.rsEp]] || (o.data.maxLength != -1 && valueArray.length >= o.data.maxLength && o.repeat)) {
-                    // auto focus on the next input of the current form
-                    o.data.onOverflow.call(o._this, c, o.nKey);
-                    return false;
-                }
-
-                // if the new character is not obeying the law...
-                else if (!this.rules[maskArray[o.rsEp]].test(c)) {
-                    o.data.onInvalid.call(o._this, c, o.nKey);
-                    return false;
+    Click.prototype._validForTurbolinks = function() {
+      return (this.link != null) && !(this.link.shouldIgnore() || this._nonStandardClick());
+    };
+
+    Click.prototype._nonStandardClick = function() {
+      return this.event.which > 1 || this.event.metaKey || this.event.ctrlKey || this.event.shiftKey || this.event.altKey;
+    };
+
+    return Click;
+
+  })();
+
+  ProgressBar = (function() {
+    var className;
+
+    className = 'turbolinks-progress-bar';
+
+    function ProgressBar(elementSelector) {
+      this.elementSelector = elementSelector;
+      this._trickle = bind(this._trickle, this);
+      this.value = 0;
+      this.content = '';
+      this.speed = 300;
+      this.opacity = 0.99;
+      this.install();
+    }
+
+    ProgressBar.prototype.install = function() {
+      this.element = document.querySelector(this.elementSelector);
+      this.element.classList.add(className);
+      this.styleElement = document.createElement('style');
+      document.head.appendChild(this.styleElement);
+      return this._updateStyle();
+    };
+
+    ProgressBar.prototype.uninstall = function() {
+      this.element.classList.remove(className);
+      return document.head.removeChild(this.styleElement);
+    };
+
+    ProgressBar.prototype.start = function() {
+      return this.advanceTo(5);
+    };
+
+    ProgressBar.prototype.advanceTo = function(value) {
+      var ref;
+      if ((value > (ref = this.value) && ref <= 100)) {
+        this.value = value;
+        this._updateStyle();
+        if (this.value === 100) {
+          return this._stopTrickle();
+        } else if (this.value > 0) {
+          return this._startTrickle();
+        }
+      }
+    };
+
+    ProgressBar.prototype.done = function() {
+      if (this.value > 0) {
+        this.advanceTo(100);
+        return this._reset();
+      }
+    };
+
+    ProgressBar.prototype._reset = function() {
+      var originalOpacity;
+      originalOpacity = this.opacity;
+      setTimeout((function(_this) {
+        return function() {
+          _this.opacity = 0;
+          return _this._updateStyle();
+        };
+      })(this), this.speed / 2);
+      return setTimeout((function(_this) {
+        return function() {
+          _this.value = 0;
+          _this.opacity = originalOpacity;
+          return _this._withSpeed(0, function() {
+            return _this._updateStyle(true);
+          });
+        };
+      })(this), this.speed);
+    };
+
+    ProgressBar.prototype._startTrickle = function() {
+      if (this.trickling) {
+        return;
+      }
+      this.trickling = true;
+      return setTimeout(this._trickle, this.speed);
+    };
+
+    ProgressBar.prototype._stopTrickle = function() {
+      return delete this.trickling;
+    };
+
+    ProgressBar.prototype._trickle = function() {
+      if (!this.trickling) {
+        return;
+      }
+      this.advanceTo(this.value + Math.random() / 2);
+      return setTimeout(this._trickle, this.speed);
+    };
+
+    ProgressBar.prototype._withSpeed = function(speed, fn) {
+      var originalSpeed, result;
+      originalSpeed = this.speed;
+      this.speed = speed;
+      result = fn();
+      this.speed = originalSpeed;
+      return result;
+    };
+
+    ProgressBar.prototype._updateStyle = function(forceRepaint) {
+      if (forceRepaint == null) {
+        forceRepaint = false;
+      }
+      if (forceRepaint) {
+        this._changeContentToForceRepaint();
+      }
+      return this.styleElement.textContent = this._createCSSRule();
+    };
+
+    ProgressBar.prototype._changeContentToForceRepaint = function() {
+      return this.content = this.content === '' ? ' ' : '';
+    };
+
+    ProgressBar.prototype._createCSSRule = function() {
+      return this.elementSelector + "." + className + "::before {\n  content: '" + this.content + "';\n  position: fixed;\n  top: 0;\n  left: 0;\n  z-index: 2000;\n  background-color: #0076ff;\n  height: 3px;\n  opacity: " + this.opacity + ";\n  width: " + this.value + "%;\n  transition: width " + this.speed + "ms ease-out, opacity " + (this.speed / 2) + "ms ease-in;\n  transform: translate3d(0,0,0);\n}";
+    };
+
+    return ProgressBar;
+
+  })();
+
+  bypassOnLoadPopstate = function(fn) {
+    return setTimeout(fn, 500);
+  };
+
+  installDocumentReadyPageEventTriggers = function() {
+    return document.addEventListener('DOMContentLoaded', (function() {
+      triggerEvent(EVENTS.CHANGE);
+      return triggerEvent(EVENTS.UPDATE);
+    }), true);
+  };
+
+  installJqueryAjaxSuccessPageUpdateTrigger = function() {
+    if (typeof jQuery !== 'undefined') {
+      return jQuery(document).on('ajaxSuccess', function(event, xhr, settings) {
+        if (!jQuery.trim(xhr.responseText)) {
+          return;
+        }
+        return triggerEvent(EVENTS.UPDATE);
+      });
+    }
+  };
+
+  installHistoryChangeHandler = function(event) {
+    var cachedPage, ref;
+    if ((ref = event.state) != null ? ref.turbolinks : void 0) {
+      if (cachedPage = pageCache[(new ComponentUrl(event.state.url)).absolute]) {
+        cacheCurrentPage();
+        return fetchHistory(cachedPage);
+      } else {
+        return visit(event.target.location.href);
+      }
+    }
+  };
+
+  initializeTurbolinks = function() {
+    rememberCurrentUrl();
+    rememberCurrentState();
+    document.addEventListener('click', Click.installHandlerLast, true);
+    window.addEventListener('hashchange', function(event) {
+      rememberCurrentUrl();
+      return rememberCurrentState();
+    }, false);
+    return bypassOnLoadPopstate(function() {
+      return window.addEventListener('popstate', installHistoryChangeHandler, false);
+    });
+  };
+
+  historyStateIsDefined = window.history.state !== void 0 || navigator.userAgent.match(/Firefox\/2[6|7]/);
+
+  browserSupportsPushState = window.history && window.history.pushState && window.history.replaceState && historyStateIsDefined;
+
+  browserIsntBuggy = !navigator.userAgent.match(/CriOS\//);
+
+  requestMethodIsSafe = (ref = popCookie('request_method')) === 'GET' || ref === '';
+
+  browserSupportsTurbolinks = browserSupportsPushState && browserIsntBuggy && requestMethodIsSafe;
+
+  browserSupportsCustomEvents = document.addEventListener && document.createEvent;
+
+  if (browserSupportsCustomEvents) {
+    installDocumentReadyPageEventTriggers();
+    installJqueryAjaxSuccessPageUpdateTrigger();
+  }
+
+  if (browserSupportsTurbolinks) {
+    visit = fetch;
+    initializeTurbolinks();
+  } else {
+    visit = function(url) {
+      return document.location.href = url;
+    };
+  }
+
+  this.Turbolinks = {
+    visit: visit,
+    pagesCached: pagesCached,
+    enableTransitionCache: enableTransitionCache,
+    enableProgressBar: enableProgressBar,
+    allowLinkExtensions: Link.allowExtensions,
+    supported: browserSupportsTurbolinks,
+    EVENTS: clone(EVENTS)
+  };
+
+}).call(this);
+/*! AdminLTE app.js
+ * ================
+ * Main JS application file for AdminLTE v2. This file
+ * should be included in all pages. It controls some layout
+ * options and implements exclusive AdminLTE plugins.
+ *
+ * @Author  Almsaeed Studio
+ * @Support <http://www.almsaeedstudio.com>
+ * @Email   <support@almsaeedstudio.com>
+ * @version 2.3.0
+ * @license MIT <http://opensource.org/licenses/MIT>
+ */
+
+//Make sure jQuery has been loaded before app.js
+if (typeof jQuery === "undefined") {
+    throw new Error("AdminLTE requires jQuery");
+}
+
+/* AdminLTE
+ *
+ * @type Object
+ * @description $.AdminLTE is the main object for the template's app.
+ *              It's used for implementing functions and options related
+ *              to the template. Keeping everything wrapped in an object
+ *              prevents conflict with other plugins and is a better
+ *              way to organize our code.
+ */
+$.AdminLTE = {};
+
+/* --------------------
+ * - AdminLTE Options -
+ * --------------------
+ * Modify these options to suit your implementation
+ */
+$.AdminLTE.options = {
+    //Add slimscroll to navbar menus
+    //This requires you to load the slimscroll plugin
+    //in every page before app.js
+    navbarMenuSlimscroll: true,
+    navbarMenuSlimscrollWidth: "3px", //The width of the scroll bar
+    navbarMenuHeight: "200px", //The height of the inner menu
+    //General animation speed for JS animated elements such as box collapse/expand and
+    //sidebar treeview slide up/down. This options accepts an integer as milliseconds,
+    //'fast', 'normal', or 'slow'
+    animationSpeed: 500,
+    //Sidebar push menu toggle button selector
+    sidebarToggleSelector: "[data-toggle='offcanvas']",
+    //Activate sidebar push menu
+    sidebarPushMenu: true,
+    //Activate sidebar slimscroll if the fixed layout is set (requires SlimScroll Plugin)
+    sidebarSlimScroll: true,
+    //Enable sidebar expand on hover effect for sidebar mini
+    //This option is forced to true if both the fixed layout and sidebar mini
+    //are used together
+    sidebarExpandOnHover: false,
+    //BoxRefresh Plugin
+    enableBoxRefresh: true,
+    //Bootstrap.js tooltip
+    enableBSToppltip: true,
+    BSTooltipSelector: "[data-toggle='tooltip']",
+    //Enable Fast Click. Fastclick.js creates a more
+    //native touch experience with touch devices. If you
+    //choose to enable the plugin, make sure you load the script
+    //before AdminLTE's app.js
+    enableFastclick: true,
+    //Control Sidebar Options
+    enableControlSidebar: true,
+    controlSidebarOptions: {
+        //Which button should trigger the open/close event
+        toggleBtnSelector: "[data-toggle='control-sidebar']",
+        //The sidebar selector
+        selector: ".control-sidebar",
+        //Enable slide over content
+        slide: true
+    },
+    //Box Widget Plugin. Enable this plugin
+    //to allow boxes to be collapsed and/or removed
+    enableBoxWidget: true,
+    //Box Widget plugin options
+    boxWidgetOptions: {
+        boxWidgetIcons: {
+            //Collapse icon
+            collapse: 'fa-minus',
+            //Open icon
+            open: 'fa-plus',
+            //Remove icon
+            remove: 'fa-times'
+        },
+        boxWidgetSelectors: {
+            //Remove button selector
+            remove: '[data-widget="remove"]',
+            //Collapse button selector
+            collapse: '[data-widget="collapse"]'
+        }
+    },
+    //Direct Chat plugin options
+    directChat: {
+        //Enable direct chat by default
+        enable: true,
+        //The button to open and close the chat contacts pane
+        contactToggleSelector: '[data-widget="chat-pane-toggle"]'
+    },
+    //Define the set of colors to use globally around the website
+    colors: {
+        lightBlue: "#3c8dbc",
+        red: "#f56954",
+        green: "#00a65a",
+        aqua: "#00c0ef",
+        yellow: "#f39c12",
+        blue: "#0073b7",
+        navy: "#001F3F",
+        teal: "#39CCCC",
+        olive: "#3D9970",
+        lime: "#01FF70",
+        orange: "#FF851B",
+        fuchsia: "#F012BE",
+        purple: "#8E24AA",
+        maroon: "#D81B60",
+        black: "#222222",
+        gray: "#d2d6de"
+    },
+    //The standard screen sizes that bootstrap uses.
+    //If you change these in the variables.less file, change
+    //them here too.
+    screenSizes: {
+        xs: 480,
+        sm: 768,
+        md: 992,
+        lg: 1200
+    }
+};
+
+/* ------------------
+ * - Implementation -
+ * ------------------
+ * The next block of code implements AdminLTE's
+ * functions and plugins as specified by the
+ * options above.
+ */
+$(function() {
+    "use strict";
+
+    //Fix for IE page transitions
+    $("body").removeClass("hold-transition");
+
+    //Extend options if external options exist
+    if (typeof AdminLTEOptions !== "undefined") {
+        $.extend(true,
+            $.AdminLTE.options,
+            AdminLTEOptions);
+    }
+
+    //Easy access to options
+    var o = $.AdminLTE.options;
+
+    //Set up the object
+    _init();
+
+    //Activate the layout maker
+    $.AdminLTE.layout.activate();
+
+    //Enable sidebar tree view controls
+    $.AdminLTE.tree('.sidebar');
+
+    //Enable control sidebar
+    if (o.enableControlSidebar) {
+        $.AdminLTE.controlSidebar.activate();
+    }
+
+    //Add slimscroll to navbar dropdown
+    if (o.navbarMenuSlimscroll && typeof $.fn.slimscroll != 'undefined') {
+        $(".navbar .menu").slimscroll({
+            height: o.navbarMenuHeight,
+            alwaysVisible: false,
+            size: o.navbarMenuSlimscrollWidth
+        }).css("width", "100%");
+    }
+
+    //Activate sidebar push menu
+    if (o.sidebarPushMenu) {
+        $.AdminLTE.pushMenu.activate(o.sidebarToggleSelector);
+    }
+
+    //Activate Bootstrap tooltip
+    if (o.enableBSToppltip) {
+        $('body').tooltip({
+            selector: o.BSTooltipSelector
+        });
+    }
+
+    //Activate box widget
+    if (o.enableBoxWidget) {
+        $.AdminLTE.boxWidget.activate();
+    }
+
+    //Activate fast click
+    if (o.enableFastclick && typeof FastClick != 'undefined') {
+        FastClick.attach(document.body);
+    }
+
+    //Activate direct chat widget
+    if (o.directChat.enable) {
+        $(document).on('click', o.directChat.contactToggleSelector, function() {
+            var box = $(this).parents('.direct-chat').first();
+            box.toggleClass('direct-chat-contacts-open');
+        });
+    }
+
+    /*
+     * INITIALIZE BUTTON TOGGLE
+     * ------------------------
+     */
+    $('.btn-group[data-toggle="btn-toggle"]').each(function() {
+        var group = $(this);
+        $(this).find(".btn").on('click', function(e) {
+            group.find(".btn.active").removeClass("active");
+            $(this).addClass("active");
+            e.preventDefault();
+        });
+
+    });
+});
+
+/* ----------------------------------
+ * - Initialize the AdminLTE Object -
+ * ----------------------------------
+ * All AdminLTE functions are implemented below.
+ */
+function _init() {
+    'use strict';
+    /* Layout
+     * ======
+     * Fixes the layout height in case min-height fails.
+     *
+     * @type Object
+     * @usage $.AdminLTE.layout.activate()
+     *        $.AdminLTE.layout.fix()
+     *        $.AdminLTE.layout.fixSidebar()
+     */
+    $.AdminLTE.layout = {
+        activate: function() {
+            var _this = this;
+            _this.fix();
+            _this.fixSidebar();
+            $(window, ".wrapper").resize(function() {
+                _this.fix();
+                _this.fixSidebar();
+            });
+        },
+        fix: function() {
+            //Get window height and the wrapper height
+            var neg = $('.main-header').outerHeight() + $('.main-footer').outerHeight();
+            var window_height = $(window).height();
+            var sidebar_height = $(".sidebar").height();
+            //Set the min-height of the content and sidebar based on the
+            //the height of the document.
+            if ($("body").hasClass("fixed")) {
+                $(".content-wrapper, .right-side").css('min-height', window_height - $('.main-footer').outerHeight());
+            } else {
+                var postSetWidth;
+                if (window_height >= sidebar_height) {
+                    $(".content-wrapper, .right-side").css('min-height', window_height - neg);
+                    postSetWidth = window_height - neg;
                 } else {
-                    o.data.onValid.call(o._this, c, o.nKey);
+                    $(".content-wrapper, .right-side").css('min-height', sidebar_height);
+                    postSetWidth = sidebar_height;
                 }
 
-                var $thisVal = this.__maskArray(
-                valueArray,
-                o.data.maskNonFixedCharsArray,
-                maskArray,
-                o.data.type,
-                o.data.maxLength,
-                o.data.defaultValue,
-                o.data.fixedCharsReg,
-                o.data.signal,
-                extraPos);
-
-                if (!o.repeat) {
-                    o.$this.val($thisVal);
+                //Fix for the control sidebar height
+                var controlSidebar = $($.AdminLTE.options.controlSidebarOptions.selector);
+                if (typeof controlSidebar !== "undefined") {
+                    if (controlSidebar.height() > postSetWidth)
+                        $(".content-wrapper, .right-side").css('min-height', controlSidebar.height());
                 }
 
-                return (o.reverse) ? this._keyPressReverse(e, o) : (o.fixed) ? this._keyPressFixed(e, o) : true;
-            },
-
-            _keyPressFixed: function(e, o) {
-
-                if (o.range.start == o.range.end) {
-                    // the 0 thing is because theres an unwanted behavior when you put a default
-                    // value on a fixed mask and you select the value from the input the range would go to the
-                    // end of the string when you enter a char. with this it will overwrite the first char wich is a better behavior.
-                    // opera fix, cant have range value bigger than value length, i think it loops thought the input value...
-                    if ((o.rsEp === 0 && o.value.length === 0) || o.rsEp < o.value.length) this.__setRange(o._this, o.rsEp, o.rsEp + 1);
-                } else this.__setRange(o._this, o.range.start, o.range.end);
-
-                return true;
-            },
-
-            _keyPressReverse: function(e, o) {
-                // fix for ie
-                // this bug was pointed by Pedro Martins
-                // it fixes a strange behavior that ie was having after a char was inputted in a text input that
-                // had its content selected by any range
-                if ($.browser.msie && ((o.range.start === 0 && o.range.end === 0) || o.range.start != o.range.end)) this.__setRange(o._this, o.value.length);
-                return false;
-            },
-
-            __autoTab: function(o) {
-                if (o.data.autoTab && (
-                (
-                o.$this.val().length >= o.data.maskArray.length && !o.repeat) || (
-                o.data.maxLength != -1 && o.valueArray.length >= o.data.maxLength && o.repeat))) {
-                    var nextEl = this.__getNextInput(o._this, o.data.autoTab);
-                    if (nextEl) {
-                        o.$this.trigger('blur');
-                        nextEl.focus().select();
-                    }
-                }
-            },
-
-            // changes the signal at the data obj from the input
-            __changeSignal: function(eventType, o) {
-                if (o.data.signal !== false) {
-                    var inputChar = (eventType === 'paste') ? o.value.charAt(0) : String.fromCharCode(o.nKey);
-                    if (this.signals && (typeof this.signals[inputChar] !== 'undefined')) {
-                        o.data.signal = this.signals[inputChar];
-                    }
-                }
-            },
-
-            __getKeyNumber: function(e) {
-                return (e.charCode || e.keyCode || e.which);
-            },
-
-            // this function is totaly specific to be used with this plugin, youll never need it
-            // it gets the array representing an unmasked string and masks it depending on the type of the mask
-            __maskArray: function(valueArray, maskNonFixedCharsArray, maskArray, type, maxlength, defaultValue, fixedCharsReg, signal, extraPos) {
-                if (type === 'reverse') valueArray.reverse();
-                valueArray = this.__removeInvalidChars(valueArray, maskNonFixedCharsArray, type === 'repeat' || type === 'infinite');
-                if (defaultValue) valueArray = this.__applyDefaultValue.call(valueArray, defaultValue);
-                valueArray = this.__applyMask(valueArray, maskArray, extraPos, fixedCharsReg);
-                switch (type) {
-                    case 'reverse':
-                        valueArray.reverse();
-                        return (signal || '') + valueArray.join('').substring(valueArray.length - maskArray.length);
-                    case 'infinite':
-                    case 'repeat':
-                        var joinedValue = valueArray.join('');
-                        return (maxlength !== -1 && valueArray.length >= maxlength) ? joinedValue.substring(0, maxlength) : joinedValue;
-                    default:
-                        return valueArray.join('').substring(0, maskArray.length);
-                }
-                return '';
-            },
-
-            // applyes the default value to the result string
-            __applyDefaultValue: function(defaultValue) {
-                var defLen = defaultValue.length,
-                    thisLen = this.length,
-                    i;
-                //removes the leading chars
-                for (i = thisLen - 1; i >= 0; i--) {
-                    if (this[i] == defaultValue.charAt(0)) {
-                        this.pop();
-                    } else break;
-                }
-                // apply the default value
-                for (i = 0; i < defLen; i++) if (!this[i]) {
-                    this[i] = defaultValue.charAt(i);
-                }
-
-                return this;
-            },
-
-            // Removes values that doesnt match the mask from the valueArray
-            // Returns the array without the invalid chars.
-            __removeInvalidChars: function(valueArray, maskNonFixedCharsArray, repeatType) {
-                // removes invalid chars
-                for (var i = 0, y = 0; i < valueArray.length; i++) {
-                    if (maskNonFixedCharsArray[y] && this.rules[maskNonFixedCharsArray[y]] && !this.rules[maskNonFixedCharsArray[y]].test(valueArray[i])) {
-                        valueArray.splice(i, 1);
-                        if (!repeatType) y--;
-                        i--;
-                    }
-                    if (!repeatType) y++;
-                }
-                return valueArray;
-            },
-
-            // Apply the current input mask to the valueArray and returns it.
-            __applyMask: function(valueArray, maskArray, plus, fixedCharsReg) {
-                if (typeof plus == 'undefined') plus = 0;
-                // apply the current mask to the array of chars
-                for (var i = 0; i < valueArray.length + plus; i++) {
-                    if (maskArray[i] && fixedCharsReg.test(maskArray[i])) valueArray.splice(i, 0, maskArray[i]);
-                }
-                return valueArray;
-            },
-
-            // searches for fixed chars begining from the range start position, till it finds a non fixed
-            __extraPositionsTill: function(rangeStart, maskArray, fixedCharsReg) {
-                var extraPos = 0;
-                while (fixedCharsReg.test(maskArray[rangeStart++])) {
-                    extraPos++;
-                }
-                return extraPos;
-            },
-
-            __getNextInput: function(input, selector) {
-                var form = input.form;
-
-                if (form == null) {
-                    return null;
-                }
-
-                var formEls = form.elements,
-                    initialInputIndex = $.inArray(input, formEls) + 1,
-                    len = formEls.length,
-                    $input = null,
-                    i;
-
-                // look for next input on the form of the pased input
-                for (i = initialInputIndex; i < len; i++) {
-                    $input = $(formEls[i]);
-                    if (this.__isNextInput($input, selector)) {
-                        return $input;
-                    }
-                }
-
-                var forms = document.forms,
-                    initialFormIndex = $.inArray(input.form, forms) + 1,
-                    y, tmpFormEls, _len = forms.length;
-                // look for the next forms for the next input
-                for (y = initialFormIndex; y < _len; y++) {
-                    tmpFormEls = forms[y].elements;
-                    len = tmpFormEls.length;
-                    for (i = 0; i < len; i++) {
-                        $input = $(tmpFormEls[i]);
-                        if (this.__isNextInput($input, selector)) {
-                            return $input;
-                        }
-                    }
-                }
-                return null;
-            },
-
-            __isNextInput: function($formEl, selector) {
-                var formEl = $formEl.get(0);
-                return formEl && (formEl.offsetWidth > 0 || formEl.offsetHeight > 0) && formEl.nodeName != 'FIELDSET' && (selector === true || (typeof selector == 'string' && $formEl.is(selector)));
-            },
-
-            // http://www.bazon.net/mishoo/articles.epl?art_id=1292
-            __setRange: function(input, start, end) {
-                if (typeof end == 'undefined') {
-                    end = start;
-                }
-                if (input.setSelectionRange) {
-                    input.setSelectionRange(start, end);
-                } else {
-                    // assumed IE
-                    var range = input.createTextRange();
-                    range.collapse();
-                    range.moveStart('character', start);
-                    range.moveEnd('character', end - start);
-                    range.select();
-                }
-            },
-
-            // adaptation from http://digitarald.de/project/autocompleter/
-            __getRange: function(input) {
-                if (!$.browser.msie && !$.browser.android) return {
-                    start: input.selectionStart,
-                    end: input.selectionEnd
-                };
-                var pos = {
-                    start: 0,
-                    end: 0
-                },
-                range = document.selection.createRange();
-                pos.start = 0 - range.duplicate().moveStart('character', - 100000);
-                pos.end = pos.start + range.text.length;
-                return pos;
-            },
-
-            //deprecated
-            unmaskedVal: function(el) {
-                return $(el).val().replace($.mask.fixedCharsRegG, '');
             }
-
-        }
-    });
-
-    $.fn.extend({
-        setMask: function(options) {
-            return $.mask.set(this, options);
         },
-        unsetMask: function() {
-            return $.mask.unset(this);
-        },
-        //deprecated
-        unmaskedVal: function() {
-            return $.mask.unmaskedVal(this[0]);
+        fixSidebar: function() {
+            //Make sure the body tag has the .fixed class
+            if (!$("body").hasClass("fixed")) {
+                if (typeof $.fn.slimScroll != 'undefined') {
+                    $(".sidebar").slimScroll({
+                        destroy: true
+                    }).height("auto");
+                }
+                return;
+            } else if (typeof $.fn.slimScroll == 'undefined' && window.console) {
+                window.console.error("Error: the fixed layout requires the slimscroll plugin!");
+            }
+            //Enable slimscroll for fixed layout
+            if ($.AdminLTE.options.sidebarSlimScroll) {
+                if (typeof $.fn.slimScroll != 'undefined') {
+                    //Destroy if it exists
+                    $(".sidebar").slimScroll({
+                        destroy: true
+                    }).height("auto");
+                    //Add slimscroll
+                    $(".sidebar").slimscroll({
+                        height: ($(window).height() - $(".main-header").height()) + "px",
+                        color: "rgba(0,0,0,0.2)",
+                        size: "3px"
+                    });
+                }
+            }
         }
-    });
+    };
+
+    /* PushMenu()
+     * ==========
+     * Adds the push menu functionality to the sidebar.
+     *
+     * @type Function
+     * @usage: $.AdminLTE.pushMenu("[data-toggle='offcanvas']")
+     */
+    $.AdminLTE.pushMenu = {
+        activate: function(toggleBtn) {
+            //Get the screen sizes
+            var screenSizes = $.AdminLTE.options.screenSizes;
+
+            //Enable sidebar toggle
+            $(toggleBtn).on('click', function(e) {
+                e.preventDefault();
+
+                //Enable sidebar push menu
+                if ($(window).width() > (screenSizes.sm - 1)) {
+                    if ($("body").hasClass('sidebar-collapse')) {
+                        $("body").removeClass('sidebar-collapse').trigger('expanded.pushMenu');
+                    } else {
+                        $("body").addClass('sidebar-collapse').trigger('collapsed.pushMenu');
+                    }
+                }
+                //Handle sidebar push menu for small screens
+                else {
+                    if ($("body").hasClass('sidebar-open')) {
+                        $("body").removeClass('sidebar-open').removeClass('sidebar-collapse').trigger('collapsed.pushMenu');
+                    } else {
+                        $("body").addClass('sidebar-open').trigger('expanded.pushMenu');
+                    }
+                }
+            });
+
+            $(".content-wrapper").click(function() {
+                //Enable hide menu when clicking on the content-wrapper on small screens
+                if ($(window).width() <= (screenSizes.sm - 1) && $("body").hasClass("sidebar-open")) {
+                    $("body").removeClass('sidebar-open');
+                }
+            });
+
+            //Enable expand on hover for sidebar mini
+            if ($.AdminLTE.options.sidebarExpandOnHover || ($('body').hasClass('fixed') && $('body').hasClass('sidebar-mini'))) {
+                this.expandOnHover();
+            }
+        },
+        expandOnHover: function() {
+            var _this = this;
+            var screenWidth = $.AdminLTE.options.screenSizes.sm - 1;
+            //Expand sidebar on hover
+            $('.main-sidebar').hover(function() {
+                if ($('body').hasClass('sidebar-mini') && $("body").hasClass('sidebar-collapse') && $(window).width() > screenWidth) {
+                    _this.expand();
+                }
+            }, function() {
+                if ($('body').hasClass('sidebar-mini') && $('body').hasClass('sidebar-expanded-on-hover') && $(window).width() > screenWidth) {
+                    _this.collapse();
+                }
+            });
+        },
+        expand: function() {
+            $("body").removeClass('sidebar-collapse').addClass('sidebar-expanded-on-hover');
+        },
+        collapse: function() {
+            if ($('body').hasClass('sidebar-expanded-on-hover')) {
+                $('body').removeClass('sidebar-expanded-on-hover').addClass('sidebar-collapse');
+            }
+        }
+    };
+
+    /* Tree()
+     * ======
+     * Converts the sidebar into a multilevel
+     * tree view menu.
+     *
+     * @type Function
+     * @Usage: $.AdminLTE.tree('.sidebar')
+     */
+    $.AdminLTE.tree = function(menu) {
+        var _this = this;
+        var animationSpeed = $.AdminLTE.options.animationSpeed;
+        $(document).on('click', menu + ' li a', function(e) {
+            //Get the clicked link and the next element
+            var $this = $(this);
+            var checkElement = $this.next();
+
+            //Check if the next element is a menu and is visible
+            if ((checkElement.is('.treeview-menu')) && (checkElement.is(':visible'))) {
+                //Close the menu
+                checkElement.slideUp(animationSpeed, function() {
+                    checkElement.removeClass('menu-open');
+                    //Fix the layout in case the sidebar stretches over the height of the window
+                    //_this.layout.fix();
+                });
+                checkElement.parent("li").removeClass("active");
+            }
+            //If the menu is not visible
+            else if ((checkElement.is('.treeview-menu')) && (!checkElement.is(':visible'))) {
+                //Get the parent menu
+                var parent = $this.parents('ul').first();
+                //Close all open menus within the parent
+                var ul = parent.find('ul:visible').slideUp(animationSpeed);
+                //Remove the menu-open class from the parent
+                ul.removeClass('menu-open');
+                //Get the parent li
+                var parent_li = $this.parent("li");
+
+                //Open the target menu and add the menu-open class
+                checkElement.slideDown(animationSpeed, function() {
+                    //Add the class active to the parent li
+                    checkElement.addClass('menu-open');
+                    parent.find('li.active').removeClass('active');
+                    parent_li.addClass('active');
+                    //Fix the layout in case the sidebar stretches over the height of the window
+                    _this.layout.fix();
+                });
+            }
+            //if this isn't a link, prevent the page from being redirected
+            if (checkElement.is('.treeview-menu')) {
+                e.preventDefault();
+            }
+        });
+    };
+
+    /* ControlSidebar
+     * ==============
+     * Adds functionality to the right sidebar
+     *
+     * @type Object
+     * @usage $.AdminLTE.controlSidebar.activate(options)
+     */
+    $.AdminLTE.controlSidebar = {
+        //instantiate the object
+        activate: function() {
+            //Get the object
+            var _this = this;
+            //Update options
+            var o = $.AdminLTE.options.controlSidebarOptions;
+            //Get the sidebar
+            var sidebar = $(o.selector);
+            //The toggle button
+            var btn = $(o.toggleBtnSelector);
+
+            //Listen to the click event
+            btn.on('click', function(e) {
+                e.preventDefault();
+                //If the sidebar is not open
+                if (!sidebar.hasClass('control-sidebar-open') && !$('body').hasClass('control-sidebar-open')) {
+                    //Open the sidebar
+                    _this.open(sidebar, o.slide);
+                } else {
+                    _this.close(sidebar, o.slide);
+                }
+            });
+
+            //If the body has a boxed layout, fix the sidebar bg position
+            var bg = $(".control-sidebar-bg");
+            _this._fix(bg);
+
+            //If the body has a fixed layout, make the control sidebar fixed
+            if ($('body').hasClass('fixed')) {
+                _this._fixForFixed(sidebar);
+            } else {
+                //If the content height is less than the sidebar's height, force max height
+                if ($('.content-wrapper, .right-side').height() < sidebar.height()) {
+                    _this._fixForContent(sidebar);
+                }
+            }
+        },
+        //Open the control sidebar
+        open: function(sidebar, slide) {
+            //Slide over content
+            if (slide) {
+                sidebar.addClass('control-sidebar-open');
+            } else {
+                //Push the content by adding the open class to the body instead
+                //of the sidebar itself
+                $('body').addClass('control-sidebar-open');
+            }
+        },
+        //Close the control sidebar
+        close: function(sidebar, slide) {
+            if (slide) {
+                sidebar.removeClass('control-sidebar-open');
+            } else {
+                $('body').removeClass('control-sidebar-open');
+            }
+        },
+        _fix: function(sidebar) {
+            var _this = this;
+            if ($("body").hasClass('layout-boxed')) {
+                sidebar.css('position', 'absolute');
+                sidebar.height($(".wrapper").height());
+                $(window).resize(function() {
+                    _this._fix(sidebar);
+                });
+            } else {
+                sidebar.css({
+                    'position': 'fixed',
+                    'height': 'auto'
+                });
+            }
+        },
+        _fixForFixed: function(sidebar) {
+            sidebar.css({
+                'position': 'fixed',
+                'max-height': '100%',
+                'overflow': 'auto',
+                'padding-bottom': '50px'
+            });
+        },
+        _fixForContent: function(sidebar) {
+            $(".content-wrapper, .right-side").css('min-height', sidebar.height());
+        }
+    };
+
+    /* BoxWidget
+     * =========
+     * BoxWidget is a plugin to handle collapsing and
+     * removing boxes from the screen.
+     *
+     * @type Object
+     * @usage $.AdminLTE.boxWidget.activate()
+     *        Set all your options in the main $.AdminLTE.options object
+     */
+    $.AdminLTE.boxWidget = {
+        selectors: $.AdminLTE.options.boxWidgetOptions.boxWidgetSelectors,
+        icons: $.AdminLTE.options.boxWidgetOptions.boxWidgetIcons,
+        animationSpeed: $.AdminLTE.options.animationSpeed,
+        activate: function(_box) {
+            var _this = this;
+            if (!_box) {
+                _box = document; // activate all boxes per default
+            }
+            //Listen for collapse event triggers
+            $(_box).on('click', _this.selectors.collapse, function(e) {
+                e.preventDefault();
+                _this.collapse($(this));
+            });
+
+            //Listen for remove event triggers
+            $(_box).on('click', _this.selectors.remove, function(e) {
+                e.preventDefault();
+                _this.remove($(this));
+            });
+        },
+        collapse: function(element) {
+            var _this = this;
+            //Find the box parent
+            var box = element.parents(".box").first();
+            //Find the body and the footer
+            var box_content = box.find("> .box-body, > .box-footer, > form  >.box-body, > form > .box-footer");
+            if (!box.hasClass("collapsed-box")) {
+                //Convert minus into plus
+                element.children(":first")
+                    .removeClass(_this.icons.collapse)
+                    .addClass(_this.icons.open);
+                //Hide the content
+                box_content.slideUp(_this.animationSpeed, function() {
+                    box.addClass("collapsed-box");
+                });
+            } else {
+                //Convert plus into minus
+                element.children(":first")
+                    .removeClass(_this.icons.open)
+                    .addClass(_this.icons.collapse);
+                //Show the content
+                box_content.slideDown(_this.animationSpeed, function() {
+                    box.removeClass("collapsed-box");
+                });
+            }
+        },
+        remove: function(element) {
+            //Find the box parent
+            var box = element.parents(".box").first();
+            box.slideUp(this.animationSpeed);
+        }
+    };
+}
+
+/* ------------------
+ * - Custom Plugins -
+ * ------------------
+ * All custom plugins are defined below.
+ */
+
+/*
+ * BOX REFRESH BUTTON
+ * ------------------
+ * This is a custom plugin to use with the component BOX. It allows you to add
+ * a refresh button to the box. It converts the box's state to a loading state.
+ *
+ * @type plugin
+ * @usage $("#box-widget").boxRefresh( options );
+ */
+(function($) {
+
+    "use strict";
+
+    $.fn.boxRefresh = function(options) {
+
+        // Render options
+        var settings = $.extend({
+            //Refresh button selector
+            trigger: ".refresh-btn",
+            //File source to be loaded (e.g: ajax/src.php)
+            source: "",
+            //Callbacks
+            onLoadStart: function(box) {
+                return box;
+            }, //Right after the button has been clicked
+            onLoadDone: function(box) {
+                return box;
+            } //When the source has been loaded
+
+        }, options);
+
+        //The overlay
+        var overlay = $('<div class="overlay"><div class="fa fa-refresh fa-spin"></div></div>');
+
+        return this.each(function() {
+            //if a source is specified
+            if (settings.source === "") {
+                if (window.console) {
+                    window.console.log("Please specify a source first - boxRefresh()");
+                }
+                return;
+            }
+            //the box
+            var box = $(this);
+            //the button
+            var rBtn = box.find(settings.trigger).first();
+
+            //On trigger click
+            rBtn.on('click', function(e) {
+                e.preventDefault();
+                //Add loading overlay
+                start(box);
+
+                //Perform ajax call
+                box.find(".box-body").load(settings.source, function() {
+                    done(box);
+                });
+            });
+        });
+
+        function start(box) {
+            //Add overlay and loading img
+            box.append(overlay);
+
+            settings.onLoadStart.call(box);
+        }
+
+        function done(box) {
+            //Remove overlay and loading img
+            box.find(overlay).remove();
+
+            settings.onLoadDone.call(box);
+        }
+
+    };
+
 })(jQuery);
-(function() {
 
+/*
+ * EXPLICIT BOX ACTIVATION
+ * -----------------------
+ * This is a custom plugin to use with the component BOX. It allows you to activate
+ * a box inserted in the DOM after the app.js was loaded.
+ *
+ * @type plugin
+ * @usage $("#box-widget").activateBox();
+ */
+(function($) {
 
-}).call(this);
-(function() {
+    'use strict';
 
+    $.fn.activateBox = function() {
+        $.AdminLTE.boxWidget.activate(this);
+    };
 
-}).call(this);
-(function() {
+})(jQuery);
 
+/*
+ * TODO LIST CUSTOM PLUGIN
+ * -----------------------
+ * This plugin depends on iCheck plugin for checkbox and radio inputs
+ *
+ * @type plugin
+ * @usage $("#todo-widget").todolist( options );
+ */
+(function($) {
 
-}).call(this);
-(function() {
+    'use strict';
 
+    $.fn.todolist = function(options) {
+        // Render options
+        var settings = $.extend({
+            //When the user checks the input
+            onCheck: function(ele) {
+                return ele;
+            },
+            //When the user unchecks the input
+            onUncheck: function(ele) {
+                return ele;
+            }
+        }, options);
 
-}).call(this);
-(function() {
+        return this.each(function() {
 
+            if (typeof $.fn.iCheck != 'undefined') {
+                $('input', this).on('ifChecked', function() {
+                    var ele = $(this).parents("li").first();
+                    ele.toggleClass("done");
+                    settings.onCheck.call(ele);
+                });
 
-}).call(this);
-(function() {
+                $('input', this).on('ifUnchecked', function() {
+                    var ele = $(this).parents("li").first();
+                    ele.toggleClass("done");
+                    settings.onUncheck.call(ele);
+                });
+            } else {
+                $('input', this).on('change', function() {
+                    var ele = $(this).parents("li").first();
+                    ele.toggleClass("done");
+                    if ($('input', ele).is(":checked")) {
+                        settings.onCheck.call(ele);
+                    } else {
+                        settings.onUncheck.call(ele);
+                    }
+                });
+            }
+        });
+    };
+}(jQuery));
+$(document).on('ready page:load', function(event) {
+    //Libera/bloqueia campos considerando o tipo de pessoa
+    $.inputBlock();
 
+    //Adiciona autocomplete para o input Ocupação
+    return $('#metier_value').autocomplete({
+        source: $('#metier_value').data('autocomplete-source'),
+        select: function(event, ui) {
+            $('#metier_value').val(ui.item.label);
+            $('#person_metier_id').val(ui.item.value);
+            return false;
+        },
+        focus: function(event, ui) {
+            $('#metier_value').val(ui.item.label);
+            $('#person_metier_id').val(ui.item.value);
+            return false;
+        },
+        change: function(event, ui) {
+            if (!ui.item) {
+                $('#metier_value').val('');
+                $('#person_metier_id').val('');
+            }
+        }
+    });
+});
 
-}).call(this);
-(function() {
+$(document).on('change', '#person_person_type_id', function(event) {
+    //Libera/bloqueia campos considerando o tipo de pessoa
+    $.inputBlock();
+});
 
+$.inputBlock = function(personTypeId) {
+    var personTypeId = $('#person_person_type_id').val();
+    //Fisica
+    if (personTypeId === '1') {
+        $('#metier_value').prop("disabled", true);
+        $('#person_contact').prop("disabled", true);        
+        $('#person_birth').prop("disabled", false);
+        $('#person_marital_status_id').prop("disabled", false);
+        $('#person_gender_id').prop("disabled", false);
+        $('#person_politically_exposed_person').prop("disabled", false);
+        $('#person_exposed_name').prop("disabled", false);
+        $('#person_occupation_id').prop("disabled", false);
+        $('#person_salary_range_id').prop("disabled", false);
+    }
 
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
-(function() {
-
-
-}).call(this);
+    //Juridica
+    if (personTypeId === '2') {
+        $('#metier_value').prop("disabled", false);
+        $('#person_contact').prop("disabled", false);
+        $('#person_birth').prop("disabled", true);
+        $('#person_marital_status_id').prop("disabled", true);
+        $('#person_gender_id').prop("disabled", true);
+        $('#person_politically_exposed_person').prop("disabled", true);
+        $('#person_exposed_name').prop("disabled", true);
+        $('#person_occupation_id').prop("disabled", true);
+        $('#person_salary_range_id').prop("disabled", true);        
+    }
+}
+;
 // This is a manifest file that'll be compiled into application.js, which will include all the files
 // listed below.
 //
@@ -32839,11 +32802,11 @@ return $.widget( "ui.tooltip", {
 
 
 
-
 $(document).on('ready page:load', function(event) {
     return $("input[type=\"text\"]").setMask();
 });
 
+// Máscara para celular com 9 dígitos
 $.mask.masks = $.extend($.mask.masks, {
     'cell-phone': {
         mask: '(99) 99999-9999'

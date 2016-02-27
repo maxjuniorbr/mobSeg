@@ -367,8 +367,8 @@ th {
 }
 @font-face {
   font-family: 'Glyphicons Halflings';
-  src: url("../fonts/bootstrap/glyphicons-halflings-regular.eot");
-  src: url("../fonts/bootstrap/glyphicons-halflings-regular.eot?#iefix") format("embedded-opentype"), url("../fonts/bootstrap/glyphicons-halflings-regular.woff2") format("woff2"), url("../fonts/bootstrap/glyphicons-halflings-regular.woff") format("woff"), url("../fonts/bootstrap/glyphicons-halflings-regular.ttf") format("truetype"), url("../fonts/bootstrap/glyphicons-halflings-regular.svg#glyphicons_halflingsregular") format("svg");
+  src: url("/assets/bootstrap/glyphicons-halflings-regular-13634da87d9e23f8c3ed9108ce1724d183a39ad072e73e1b3d8cbf646d2d0407.eot");
+  src: url("/assets/bootstrap/glyphicons-halflings-regular-13634da87d9e23f8c3ed9108ce1724d183a39ad072e73e1b3d8cbf646d2d0407.eot?#iefix") format("embedded-opentype"), url("/assets/bootstrap/glyphicons-halflings-regular-fe185d11a49676890d47bb783312a0cda5a44c4039214094e7957b4c040ef11c.woff2") format("woff2"), url("/assets/bootstrap/glyphicons-halflings-regular-a26394f7ede100ca118eff2eda08596275a9839b959c226e15439557a5a80742.woff") format("woff"), url("/assets/bootstrap/glyphicons-halflings-regular-e395044093757d82afcb138957d06a1ea9361bdcf0b442d06a18a8051af57456.ttf") format("truetype"), url("/assets/bootstrap/glyphicons-halflings-regular-42f60659d265c1a3c30f9fa42abcbb56bd4a53af4d83d316d6dd7a36903c43e5.svg#glyphicons_halflingsregular") format("svg");
 }
 /* line 24, /usr/local/lib/ruby/gems/2.2.0/gems/bootstrap-sass-3.3.6/assets/stylesheets/bootstrap/_glyphicons.scss */
 .glyphicon {
@@ -8743,262 +8743,21 @@ button.close {
     display: none !important;
   }
 }
-@font-face {
-  font-family: "Glyphicons Halflings";
-  src: url("/assets/glyphicons-halflings-regular.eot");
-  src: url("/assets/glyphicons-halflings-regular.eot?#iefix") format("embedded-opentype"), url("/assets/glyphicons-halflings-regular.woff") format("woff"), url("/assets/glyphicons-halflings-regular.ttf") format("truetype"), url("/assets/glyphicons-halflings-regular.svg#glyphicons-halflingsregular") format("svg");
-}
-/* line 8, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-body {
-  margin-top: 100px;
-  background-color: #222;
-}
-
-@media (min-width: 768px) {
-  /* line 13, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  body {
-    margin-top: 50px;
-  }
-}
-/* line 16, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-#wrapper {
-  padding-left: 0;
-}
-
-/* line 19, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-#page-wrapper {
-  width: 100%;
-  padding: 0;
-  background-color: #fff;
-}
-
-/* line 24, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.huge {
-  font-size: 50px;
-  line-height: normal;
-}
-
-@media (min-width: 768px) {
-  /* line 29, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  #wrapper {
-    padding-left: 225px;
-  }
-
-  /* line 31, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  #page-wrapper {
-    padding: 10px;
-  }
-}
-/* Top Navigation */
-/* line 36, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav {
-  padding: 0 15px;
-}
-/* line 39, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > li {
-  display: inline-block;
-  float: left;
-}
-/* line 42, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > li > a {
-  padding-top: 15px;
-  padding-bottom: 15px;
-  line-height: 20px;
-  color: #999;
-}
-/* line 47, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > li > a:hover, .top-nav > li > a:focus {
-  color: #fff;
-  background-color: #000;
-}
-/* line 51, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > .open > a {
-  color: #fff;
-  background-color: #000;
-}
-/* line 54, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > .open > a:hover, .top-nav > .open > a:focus {
-  color: #fff;
-  background-color: #000;
-}
-/* line 57, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > .open > .dropdown-menu {
-  float: left;
-  position: absolute;
-  margin-top: 0;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  background-color: #fff;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-}
-/* line 67, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.top-nav > .open > .dropdown-menu > li > a {
-  white-space: normal;
-}
-
-/* line 70, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-ul.message-dropdown {
-  padding: 0;
-  max-height: 250px;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-/* line 77, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-li.message-preview {
-  width: 275px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-}
-/* line 80, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-li.message-preview > a {
-  padding-top: 15px;
-  padding-bottom: 15px;
-}
-/* line 83, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-li.message-footer {
-  margin: 5px 0;
-}
-
-/* line 86, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-ul.alert-dropdown {
-  width: 200px;
-}
-
-/* Side Navigation */
-@media (min-width: 768px) {
-  /* line 92, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  .side-nav {
-    position: fixed;
-    top: 51px;
-    left: 225px;
-    width: 225px;
-    margin-left: -225px;
-    border: none;
-    border-radius: 0;
-    overflow-y: auto;
-    background-color: #222;
-    bottom: 0;
-    overflow-x: hidden;
-    padding-bottom: 40px;
-  }
-  /* line 105, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  .side-nav > li > a {
-    width: 225px;
-  }
-  /* line 108, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-  .side-nav li a:hover, .side-nav li a:focus {
-    outline: none;
-    background-color: #000 !important;
-  }
-}
-/* line 112, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.side-nav > li > ul {
-  padding: 0;
-}
-/* line 114, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.side-nav > li > ul > li > a {
-  display: block;
-  padding: 10px 15px 10px 38px;
-  text-decoration: none;
-  color: #999;
-}
-/* line 119, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.side-nav > li > ul > li > a:hover {
-  color: #fff;
-}
-
-/* Flot Chart Containers */
-/* line 124, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.flot-chart {
-  display: block;
-  height: 400px;
-}
-
-/* line 128, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.flot-chart-content {
-  width: 100%;
-  height: 100%;
-}
-
-/* Custom Colored Panels */
-/* line 134, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.huge {
-  font-size: 40px;
-}
-
-/* line 137, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-green {
-  border-color: #5cb85c;
-}
-/* line 140, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-green > .panel-heading {
-  border-color: #5cb85c;
-  color: #fff;
-  background-color: #5cb85c;
-}
-/* line 144, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-green > a {
-  color: #5cb85c;
-}
-/* line 146, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-green > a:hover {
-  color: #3d8b3d;
-}
-
-/* line 149, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-red {
-  border-color: #d9534f;
-}
-/* line 152, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-red > .panel-heading {
-  border-color: #d9534f;
-  color: #fff;
-  background-color: #d9534f;
-}
-/* line 156, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-red > a {
-  color: #d9534f;
-}
-/* line 158, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-red > a:hover {
-  color: #b52b27;
-}
-
-/* line 161, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-yellow {
-  border-color: #f0ad4e;
-}
-/* line 164, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-yellow > .panel-heading {
-  border-color: #f0ad4e;
-  color: #fff;
-  background-color: #f0ad4e;
-}
-/* line 168, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-yellow > a {
-  color: #f0ad4e;
-}
-/* line 170, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
-.panel-yellow > a:hover {
-  color: #df8a13;
-}
-
-/* line 173, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
+/* line 4, /home/pdianin/Desenvolvimento/ror/mobSeg/app/assets/stylesheets/application.scss */
 ul.ui-autocomplete {
   z-index: 2;
   position: absolute;
   list-style: none;
   margin: 0;
   padding: 0;
-  border: solid 1px #999;
+  border: solid 1px #999999;
   cursor: default;
 }
-/* line 181, /home/pdianin/Desenvolvimento/ror/mobseg/app/assets/stylesheets/application.css.sass */
+/* line 13, /home/pdianin/Desenvolvimento/ror/mobSeg/app/assets/stylesheets/application.scss */
 ul.ui-autocomplete li {
   cursor: pointer;
-  background-color: #fff;
-  border-top: solid 1px #ddd;
+  background-color: white;
+  border-top: solid 1px #dddddd;
   margin: 0;
   padding: 0 0 0 10px;
   line-height: 30px;

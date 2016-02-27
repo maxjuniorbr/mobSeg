@@ -1,0 +1,39 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @productive.name %>
+</p>
+
+<p>
+  <strong>Short name:</strong>
+  <%= @productive.short_name %>
+</p>
+
+<p>
+  <strong>Gender:</strong>
+  <%= @productive.gender %>
+</p>
+
+<p>
+  <strong>Cpf:</strong>
+  <%= @productive.cpf %>
+</p>
+
+<p>
+  <strong>Email:</strong>
+  <%= @productive.email %>
+</p>
+
+<p>
+  <strong>Birth:</strong>
+  <%= @productive.birth %>
+</p>
+
+<p>
+  <strong>Status:</strong>
+  <%= @productive.status %>
+</p>
+
+<%= link_to 'Edit', edit_productive_path(@productive) %> |
+<%= link_to 'Back', productives_path %>

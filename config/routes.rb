@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :productives
   resources :document_types
   resources :documents
   resources :document_types

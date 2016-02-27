@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160221173754) do
+ActiveRecord::Schema.define(version: 20160225230958) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -125,6 +125,20 @@ ActiveRecord::Schema.define(version: 20160221173754) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "productives", force: :cascade do |t|
+    t.string   "name"
+    t.string   "short_name"
+    t.integer  "gender_id"
+    t.string   "cpf"
+    t.string   "email"
+    t.date     "birth"
+    t.boolean  "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_index "productives", ["gender_id"], name: "index_productives_on_gender_id", using: :btree
+
   create_table "proposals", force: :cascade do |t|
     t.integer  "person_id"
     t.integer  "current_insurer_id"
@@ -184,6 +198,7 @@ ActiveRecord::Schema.define(version: 20160221173754) do
   add_foreign_key "people", "occupations"
   add_foreign_key "people", "person_types"
   add_foreign_key "people", "salary_ranges"
+  add_foreign_key "productives", "genders"
   add_foreign_key "proposals", "branches"
   add_foreign_key "proposals", "discount_technical_types"
   add_foreign_key "proposals", "operations"

@@ -1,24 +1,30 @@
 ---
 pt-BR:
-  # Person
+  # Person  
   person: Pessoa
+  people: Segurado
   insured: Segurado
+  productive: Produtor
   politically_exposed_person: Pessoa Politicamente Exposta
-  person_type: Tipo de Pessoa
+  person_type: Pessoa
   contact: Contato
-  birth: Data de Nascimento
-  marital_status_id: Estado Civil
+  birth: Nascimento
+  marital_status: Estado Civil
   # Proposal
   proposal: Proposta
   # General
-  listing: Listando
-  registering: Cadastrando
-  editing: Editando
-  new: Novo
-  back: Voltar
-  edit: Alterar
-  destroy: Apagar
   cod: Código
+  new: Novo
+  create: Novo
+  back: Voltar
+  save: Salvar
+  edit: Alterando
+  update: Alterar
+  destroy: Apagar
+  index: Listando
+  include: Incluir
+  settings: Configurações
+  register_error: 'Por favor, verifique o(s) seguinte(s) campo(s):'
   # Models
   activerecord:
     models:

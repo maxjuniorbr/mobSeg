@@ -46,10 +46,21 @@ group :development do
 end
 
 # Bootstrap
-gem 'bootstrap-sass'
+gem 'bootstrap-sass', '~> 3.3.6'
+
+# Sprockets Rails
+gem 'sprockets-rails', :require => 'sprockets/railtie'
 
 # Automatically adds the proper vendor prefixes to your CSS code when it is compiled
 gem 'autoprefixer-rails'
+
+# Font Awesome
+gem 'font-awesome-sass'
+
+# Tether
+# source 'https://rails-assets.org' do
+#   gem 'rails-assets-tether', '>= 1.1.0'
+#end
 
 # Meiomask
 gem 'meiomask-rails'
