@@ -1,3 +1,10 @@
 class Productive < ActiveRecord::Base
-  belongs_to :gender
+  has_one :person
+
+
+  validates :name, presence: true
+  validates :short_name, presence: true
+  validates :cpf, presence: true
+  validates :email, presence: true
+  validates :gender_id, presence: true
 end

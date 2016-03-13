@@ -247,12 +247,15 @@
 						<li>
 							<%= link_to(content_tag(:i, '', class:'fa fa-users') + ' ' + t(:people).pluralize, people_path) %>
 						</li>
+						<li>
+							<%= link_to(content_tag(:i, '', class:'fa fa-pencil-square-o') + ' ' + t(:proposals),proposals_path) %>
+						</li>
 						<li class='header'>
 							<i class='fa fa-gears'></i>
 							<%= t(:settings).mb_chars.upcase %>
 						</li>
 						<li>
-							<%= link_to(content_tag(:i, '', class:'fa fa-circle-o text-aqua') + ' ' + t(:productive), productives_path) %>
+							<%= link_to(content_tag(:i, '', class:'fa fa-circle-o text-aqua') + ' ' + t(:productives), productives_path) %>
 						</li>
 					</ul>
 				</section>

@@ -28,11 +28,9 @@ class ProductivesController < ApplicationController
 
     respond_to do |format|
       if @productive.save
-        format.html { redirect_to @productive, notice: 'Productive was successfully created.' }
-        format.json { render :show, status: :created, location: @productive }
+        format.html { redirect_to productives_path, notice: 'Productive was successfully created.' }
       else
         format.html { render :new }
-        format.json { render json: @productive.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -42,11 +40,9 @@ class ProductivesController < ApplicationController
   def update
     respond_to do |format|
       if @productive.update(productive_params)
-        format.html { redirect_to @productive, notice: 'Productive was successfully updated.' }
-        format.json { render :show, status: :ok, location: @productive }
+        format.html { redirect_to productives_path, notice: 'Productive was successfully updated.' }
       else
         format.html { render :edit }
-        format.json { render json: @productive.errors, status: :unprocessable_entity }
       end
     end
   end

@@ -1202,3 +1202,29 @@ DocumentType.create(value: 'RNE')
 
 Productive.create(name: 'Paulo César Dianin', short_name: 'Paulo', gender_id: 1, cpf: '43646107987', email: 'paulo@bdseguros.com.br', birth: '19/10/1962', status: true)
 Productive.create(name: 'Paulo César Dianin Junior', short_name: 'Junior', gender_id: 1, cpf: '04039552970', email: 'maxjuniorbr@gmail.com', birth: '08/06/1982', status: true)
+
+Proposal.create(person_id: 1, current_insurer_id: 1, susep_id: 1, branch_id: 1, start_validity: '01/01/2016', end_validity: '01/01/2017', installment_number: '4', payment_type_id: 2)
+
+Insurer.create(name: 'Azul', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'Bradesco', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'HDI', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'Itaú', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'Mapfre', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'Porto', branch_office: 'Maringá', standard_commission: '20')
+Insurer.create(name: 'Tokio Marine', branch_office: 'Maringá', standard_commission: '20')
+
+Susep.create(insurer_id: 4, person_id: 1, value: '0699251111')
+
+Operation.create(value: 'Seguro Novo')
+Operation.create(value: 'Endosso')
+Operation.create(value: 'Renovação')
+
+Branch.create(value: 'Automóvel')
+Branch.create(value: 'Residencial')
+
+DiscountTechnicalType.create(value: '(%) Percentual')
+DiscountTechnicalType.create(value: '(R$) Real')
+
+PaymentType.create(value: 'Cartão de Crédito')
+PaymentType.create(value: 'Débito em Conta')
+PaymentType.create(value: 'Ficha de Compensação')

@@ -1,39 +1,32 @@
-<p id="notice"><%= notice %></p>
-
-<h1>Listing Productives</h1>
-
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Short name</th>
-      <th>Gender</th>
-      <th>Cpf</th>
-      <th>Email</th>
-      <th>Birth</th>
-      <th>Status</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @productives.each do |productive| %>
-      <tr>
-        <td><%= productive.name %></td>
-        <td><%= productive.short_name %></td>
-        <td><%= productive.gender %></td>
-        <td><%= productive.cpf %></td>
-        <td><%= productive.email %></td>
-        <td><%= productive.birth %></td>
-        <td><%= productive.status %></td>
-        <td><%= link_to 'Show', productive %></td>
-        <td><%= link_to 'Edit', edit_productive_path(productive) %></td>
-        <td><%= link_to 'Destroy', productive, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Productive', new_productive_path %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box'>
+      <div class='box-header text-right'>
+        <td><%= link_to(content_tag(:i, '', class:'fa fa-user') + ' ' + t(:include), new_productive_path, { class: 'btn btn-primary' }) %></td>
+      </div>
+      <div class='box-body'>
+        <table class='table table-hover'>
+          <thead>
+            <tr>
+              <th><%= t(:productive) %></th>
+              <th><%= t(:nickname) %></th>
+              <th><%= t(:email) %></th>
+              <th colspan="2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @productives.each do |productive| %>
+            <tr>
+              <td><%= productive.name %></td>
+              <td><%= productive.short_name %></td>
+              <td><%= productive.email %></td>
+              <td><%= link_to(content_tag(:i, '', class:'fa fa-pencil'), edit_productive_path(productive)) %></td>
+              <td><%= link_to(content_tag(:i, '', class:'fa fa-remove'), productive, method: :delete, data: { confirm: 'Are you sure?' }, class: 'text-red' ) %></td>
+            </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,71 +1,38 @@
-<p id="notice"><%= notice %></p>
-
-<h1>Listing Proposals</h1>
-
-<table>
-  <thead>
-    <tr>
-      <th>Person</th>
-      <th>Current insurer</th>
-      <th>Susep</th>
-      <th>Branch</th>
-      <th>Start validity</th>
-      <th>End validity</th>
-      <th>Issue date</th>
-      <th>Operation</th>
-      <th>Proposal number</th>
-      <th>Insurance policy</th>
-      <th>Endorsement number</th>
-      <th>Previous insurer</th>
-      <th>Previous insurance policy</th>
-      <th>Previous endorsement number</th>
-      <th>Policy cost</th>
-      <th>Iof</th>
-      <th>Additional fractionation</th>
-      <th>Expenses</th>
-      <th>Discount technical type</th>
-      <th>Discount technical</th>
-      <th>Discount broker</th>
-      <th>Installment number</th>
-      <th>Payment type</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @proposals.each do |proposal| %>
-      <tr>
-        <td><%= proposal.person %></td>
-        <td><%= proposal.current_insurer_id %></td>
-        <td><%= proposal.susep %></td>
-        <td><%= proposal.branch %></td>
-        <td><%= proposal.start_validity %></td>
-        <td><%= proposal.end_validity %></td>
-        <td><%= proposal.issue_date %></td>
-        <td><%= proposal.operation %></td>
-        <td><%= proposal.proposal_number %></td>
-        <td><%= proposal.insurance_policy %></td>
-        <td><%= proposal.endorsement_number %></td>
-        <td><%= proposal.previous_insurer_id %></td>
-        <td><%= proposal.previous_insurance_policy %></td>
-        <td><%= proposal.previous_endorsement_number %></td>
-        <td><%= proposal.policy_cost %></td>
-        <td><%= proposal.iof %></td>
-        <td><%= proposal.additional_fractionation %></td>
-        <td><%= proposal.expenses %></td>
-        <td><%= proposal.discount_technical_type %></td>
-        <td><%= proposal.discount_technical %></td>
-        <td><%= proposal.discount_broker %></td>
-        <td><%= proposal.installment_number %></td>
-        <td><%= proposal.payment_type %></td>
-        <td><%= link_to 'Show', proposal %></td>
-        <td><%= link_to 'Edit', edit_proposal_path(proposal) %></td>
-        <td><%= link_to 'Destroy', proposal, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Proposal', new_proposal_path %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box'>
+      <div class='box-header text-right'>
+        <td><%= link_to(content_tag(:i, '', class:'fa fa-user') + ' ' + t(:include), new_proposal_path, { class: 'btn btn-primary' }) %></td>
+      </div>
+      <div class='box-body'>
+        <table class='table table-hover'
+          <thead>
+            <tr>
+              <th><%= t(:insured) %></th>
+              <th><%= t(:current_insurer) %></th>
+              <th><%= t(:susep) %></th>
+              <th><%= t(:branch) %></th>
+              <th><%= t(:start_validity) %></th>
+              <th><%= t(:end_validity) %></th>
+              <th colspan="2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @proposals.each do |proposal| %>
+            <tr>
+              <td><%= proposal.person.name %></td>
+              <td><%= Insurer.where(id: proposal.current_insurer_id).select(:name).first.name %></td>
+              <td><%= proposal.susep.value %></td>
+              <td><%= proposal.branch.value %></td>
+              <td><%= date_format(proposal.start_validity) %></td>
+              <td><%= date_format(proposal.end_validity) %></td>
+              <td><%= link_to(content_tag(:i, '', class:'fa fa-pencil'), edit_proposal_path(proposal)) %></td>
+              <td><%= link_to(content_tag(:i, '', class:'fa fa-remove'), proposal, method: :delete, data: { confirm: 'Are you sure?' }, class: 'text-red' ) %></td>
+            </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

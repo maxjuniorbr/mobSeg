@@ -1,109 +1,171 @@
 <%= form_for(@proposal) do |f| %>
-  <% if @proposal.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@proposal.errors.count, "error") %> prohibited this proposal from being saved:</h2>
-
-      <ul>
-      <% @proposal.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
+<%- if @proposal.errors.any? %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box box-danger'>
+      <div class='box-header with-border'>
+        <i class="fa fa-warning font-sm"></i>
+        <%= t(:register_error) %>
+      </div>
+      <div class='box-body'>
+        <div class='row'>
+          <ul>
+            <%- @proposal.errors.full_messages.each do |message| %>
+            <li class='text-red'>
+              <%= message %>
+            </li>
+            <%- end %>
+          </ul>
+        </div>
+      </div>
     </div>
-  <% end %>
-
-  <div class="field">
-    <%= f.label :person_id %><br>
-    <%= f.text_field :person_id %>
   </div>
-  <div class="field">
-    <%= f.label :current_insurer_id %><br>
-    <%= f.number_field :current_insurer_id %>
+</div>
+<%- end %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box'>
+      <div class='box-body'>
+        <div class='col-lg-1'>
+          <div class='form-group'>
+            <%= label_tag t(:cod) %>
+            <%= f.text_field :person_id, { class: 'form-control', disabled: false } %>
+          </div>
+        </div>
+        <div class='col-lg-5'>
+          <div class='form-group'>
+            <%= f.label t(:insured) %>
+            <%= text_field_tag :person_value, @proposal.person.nil? ? '' : @proposal.person.name, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :current_insurer_id %>
+            <%= f.collection_select :current_insurer_id, Insurer.all, :id, :name, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :susep_id %>
+            <%= f.collection_select :susep_id, Susep.all, :id, :insurer_with_value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :branch_id %>
+            <%= f.collection_select :branch_id, Branch.all, :id, :value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :start_validity %>
+            <%= f.text_field :start_validity, value: date_format(@proposal.try(:start_validity)), class: 'form-control', alt: :date %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :end_validity %>
+            <%= f.text_field :end_validity, value: date_format(@proposal.try(:end_validity)), class: 'form-control', alt: :date %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :issue_date %>
+            <%= f.text_field :issue_date, value: date_format(@proposal.try(:issue_date)), class: 'form-control', alt: :date %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :operation_id %>
+            <%= f.collection_select :operation_id, Operation.all, :id, :value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :proposal_number %>
+            <%= f.text_field :proposal_number, { class: 'form-control', maxlength: 20 } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :insurance_policy %>
+            <%= f.text_field :insurance_policy, { class: 'form-control', maxlength: 20 } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :endorsement_number %>
+            <%= f.text_field :endorsement_number, { class: 'form-control', maxlength: 20 } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :previous_insurer_id %>
+            <%= f.collection_select :previous_insurer_id, Insurer.all, :id, :name, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :previous_insurance_policy %>
+            <%= f.text_field :previous_insurance_policy, { class: 'form-control', maxlength: 20 } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :policy_cost %>
+            <%= f.text_field :policy_cost, { class: 'form-control', alt: :decimal } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :iof %>
+            <%= f.text_field :iof, { class: 'form-control', alt: :decimal_percentage } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :additional_fractionation %>
+            <%= f.text_field :additional_fractionation, { class: 'form-control', alt: :decimal } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :discount_technical_type_id %>
+            <%= f.collection_select :discount_technical_type_id, DiscountTechnicalType.all, :id, :value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :discount_technical %>
+            <%= f.text_field :discount_technical, { class: 'form-control', alt: :decimal } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :discount_broker %>
+            <%= f.text_field :discount_broker, { class: 'form-control', alt: :decimal_percentage } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :installment_number %>
+            <%= f.text_field :installment_number, { class: 'form-control', alt: :integer } %>
+          </div>
+        </div>
+        <div class='col-lg-10'>
+          <div class='form-group'>
+            <%= f.label :payment_type_id %>
+            <%= f.collection_select :payment_type_id, PaymentType.all, :id, :value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-12 text-right'>
+          <%= button_tag(type: 'submit', class: "btn btn-primary") do %>
+          <%= content_tag(:i, '', class:'fa fa-save') %>
+          <%= t(:save) %>
+          <%- end %> <%= link_to(content_tag(:i, '', class:'fa fa-caret-square-o-left') + ' ' + t(:back), proposals_path, { class: 'btn btn-default' }) %>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :susep_id %><br>
-    <%= f.text_field :susep_id %>
-  </div>
-  <div class="field">
-    <%= f.label :branch_id %><br>
-    <%= f.text_field :branch_id %>
-  </div>
-  <div class="field">
-    <%= f.label :start_validity %><br>
-    <%= f.date_select :start_validity %>
-  </div>
-  <div class="field">
-    <%= f.label :end_validity %><br>
-    <%= f.date_select :end_validity %>
-  </div>
-  <div class="field">
-    <%= f.label :issue_date %><br>
-    <%= f.date_select :issue_date %>
-  </div>
-  <div class="field">
-    <%= f.label :operation_id %><br>
-    <%= f.text_field :operation_id %>
-  </div>
-  <div class="field">
-    <%= f.label :proposal_number %><br>
-    <%= f.text_field :proposal_number %>
-  </div>
-  <div class="field">
-    <%= f.label :insurance_policy %><br>
-    <%= f.text_field :insurance_policy %>
-  </div>
-  <div class="field">
-    <%= f.label :endorsement_number %><br>
-    <%= f.text_field :endorsement_number %>
-  </div>
-  <div class="field">
-    <%= f.label :previous_insurer_id %><br>
-    <%= f.number_field :previous_insurer_id %>
-  </div>
-  <div class="field">
-    <%= f.label :previous_insurance_policy %><br>
-    <%= f.text_field :previous_insurance_policy %>
-  </div>
-  <div class="field">
-    <%= f.label :previous_endorsement_number %><br>
-    <%= f.text_field :previous_endorsement_number %>
-  </div>
-  <div class="field">
-    <%= f.label :policy_cost %><br>
-    <%= f.text_field :policy_cost %>
-  </div>
-  <div class="field">
-    <%= f.label :iof %><br>
-    <%= f.text_field :iof %>
-  </div>
-  <div class="field">
-    <%= f.label :additional_fractionation %><br>
-    <%= f.text_field :additional_fractionation %>
-  </div>
-  <div class="field">
-    <%= f.label :expenses %><br>
-    <%= f.text_field :expenses %>
-  </div>
-  <div class="field">
-    <%= f.label :discount_technical_type_id %><br>
-    <%= f.text_field :discount_technical_type_id %>
-  </div>
-  <div class="field">
-    <%= f.label :discount_technical %><br>
-    <%= f.text_field :discount_technical %>
-  </div>
-  <div class="field">
-    <%= f.label :discount_broker %><br>
-    <%= f.text_field :discount_broker %>
-  </div>
-  <div class="field">
-    <%= f.label :installment_number %><br>
-    <%= f.number_field :installment_number %>
-  </div>
-  <div class="field">
-    <%= f.label :payment_type_id %><br>
-    <%= f.text_field :payment_type_id %>
-  </div>
-  <div class="actions">
-    <%= f.submit %>
-  </div>
+</div>
 <% end %>

@@ -18,19 +18,33 @@
 //= require meiomask
 //= require_tree .
 
+var menuActive = '';
+
 $(document).on('ready page:load', function(event) {
     $("input[type=\"text\"]").setMask();
+
+    if (menuActive !== '') {
+        $('.sidebar-menu > li > a').filter(function() {
+            if ($(this).text() === menuActive) {
+                $(this).parent().addClass('active');
+            }
+        });
+    }
+
+    $('.sidebar-menu > li > a').click(function() {
+        menuActive = $(this).text()
+    });
 });
 
 // Máscara para celular com 9 dígitos
 $.mask.masks = $.extend($.mask.masks, {
     'cell-phone': {
         mask: '(99) 99999-9999'
-    }
+    },
+    'decimal_percentage': {
+        mask: '99,99',
+        type: 'reverse',
+        defaultValue: '000',
+        precision: '4'
+    },
 });
-
-/* 
-    Customized Tree menu. 
-    Logic : Iterate over all the treeview except the clicked element and remove the active class,  change the fa-angle-down classs to fa-angle-left, and then slideup.
-    If it is the clicked element, then add class active, change icons from down to left and slideDown().
-*/

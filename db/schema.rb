@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160225230958) do
+ActiveRecord::Schema.define(version: 20160312231441) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -110,6 +110,7 @@ ActiveRecord::Schema.define(version: 20160225230958) do
     t.integer  "salary_range_id"
     t.datetime "created_at",                 null: false
     t.datetime "updated_at",                 null: false
+    t.integer  "productive_id"
   end
 
   add_index "people", ["gender_id"], name: "index_people_on_gender_id", using: :btree
@@ -117,6 +118,7 @@ ActiveRecord::Schema.define(version: 20160225230958) do
   add_index "people", ["metier_id"], name: "index_people_on_metier_id", using: :btree
   add_index "people", ["occupation_id"], name: "index_people_on_occupation_id", using: :btree
   add_index "people", ["person_type_id"], name: "index_people_on_person_type_id", using: :btree
+  add_index "people", ["productive_id"], name: "index_people_on_productive_id", using: :btree
   add_index "people", ["salary_range_id"], name: "index_people_on_salary_range_id", using: :btree
 
   create_table "person_types", force: :cascade do |t|
@@ -197,6 +199,7 @@ ActiveRecord::Schema.define(version: 20160225230958) do
   add_foreign_key "people", "metiers"
   add_foreign_key "people", "occupations"
   add_foreign_key "people", "person_types"
+  add_foreign_key "people", "productives"
   add_foreign_key "people", "salary_ranges"
   add_foreign_key "productives", "genders"
   add_foreign_key "proposals", "branches"

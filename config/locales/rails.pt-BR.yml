@@ -3,8 +3,7 @@ pt-BR:
   # Person  
   person: Pessoa
   people: Segurado
-  insured: Segurado
-  productive: Produtor
+  insured: Segurado  
   politically_exposed_person: Pessoa Politicamente Exposta
   person_type: Pessoa
   contact: Contato
@@ -12,6 +11,17 @@ pt-BR:
   marital_status: Estado Civil
   # Proposal
   proposal: Proposta
+  proposals: Propostas
+  current_insurer: Seguradora Atual
+  branch: Ramo
+  start_validity: Inicio de Vigência
+  end_validity: Fim de Vigência
+  # Productive
+  productive: Produtor
+  productives: Produtores
+  nickname: Apelido
+  email: E-mail
+  productive_status: Status do Produtor
   # General
   cod: Código
   new: Novo
@@ -30,8 +40,9 @@ pt-BR:
     models:
       person: Pessoa
     attributes:
-      person: 
-        person: Pessoa
+      person:
+        productive_id: Produtor
+        person_id: Pessoa
         name: Nome
         person_type_id: Tipo de Pessoa
         metier_id: Ocupação
@@ -43,6 +54,35 @@ pt-BR:
         exposed_name: Nome exposto
         occupation_id: Ocupação
         salary_range_id: Faixa Salarial
+        save: Salvar
+      productive:
+        name: Nome
+        short_name: Apelido
+        cpf: CPF
+        gender_id: Gênero
+        birth: Data de Nascimento
+        save: Salvar
+      proposal:
+        person_id: Pessoa
+        current_insurer_id: Seguradora Atual
+        branch: Ramo
+        start_validity: Inicio de Vigência
+        end_validity: Fim de Vigência
+        issue_date: Data de Emissão
+        operation: Operação
+        proposal_number: Número da Proposta
+        insurance_policy: Número da Apólice
+        endorsement_number: Número do Endosso
+        previous_insurer_id: Seguradora Anterior
+        previous_insurance_policy: Número da Apólice Anterior
+        policy_cost: Custo de Apólice
+        iof: IOF
+        additional_fractionation: Adicional de Fracionamento
+        discount_technical_type_id: Tipo de Desconto Técnico
+        discount_technical: Desconto Técnico
+        discount_broker: Desconto do Corretor
+        installment_number: Número de Parcelas
+        payment_type_id: Forma de Pagamento
         save: Salvar
   date:
     abbr_day_names:

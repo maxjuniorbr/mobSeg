@@ -26,7 +26,13 @@
   <div class='col-xs-12'>
     <div class='box'>
       <div class='box-body'>
-        <div class='col-lg-10'>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :productive_id %>
+            <%= f.collection_select :productive_id, Productive.all, :id, :short_name, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-8'>
           <div class='form-group'>
             <%= f.label :name %>
             <%= f.text_field :name, { class: 'form-control', maxlength: 100 } %>

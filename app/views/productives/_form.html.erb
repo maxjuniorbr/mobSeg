@@ -1,45 +1,86 @@
 <%= form_for(@productive) do |f| %>
-  <% if @productive.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@productive.errors.count, "error") %> prohibited this productive from being saved:</h2>
-
-      <ul>
-      <% @productive.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
+<%- if @productive.errors.any? %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box box-danger'>
+      <div class='box-header with-border'>
+        <i class="fa fa-warning font-sm"></i>
+        <%= t(:register_error) %>
+      </div>
+      <div class='box-body'>
+        <div class='row'>
+          <ul>
+            <%- @productive.errors.full_messages.each do |message| %>
+            <li class='text-red'>
+              <%= message %>
+            </li>
+            <%- end %>
+          </ul>
+        </div>
+      </div>
     </div>
-  <% end %>
-
-  <div class="field">
-    <%= f.label :name %><br>
-    <%= f.text_field :name %>
   </div>
-  <div class="field">
-    <%= f.label :short_name %><br>
-    <%= f.text_field :short_name %>
+</div>
+<%- end %>
+<div class='row'>
+  <div class='col-xs-12'>
+    <div class='box'>
+      <div class='box-body'>
+        <div class='col-lg-10'>
+          <div class='form-group'>
+            <%= f.label :name %>
+            <%= f.text_field :name, { class: 'form-control', maxlength: 100 } %>
+          </div>
+        </div>
+        <div class='col-lg-2'>
+          <div class='form-group'>
+            <%= f.label :short_name %>
+            <%= f.text_field :short_name, { class: 'form-control', maxlength: 50 } %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :cpf %>
+            <%= f.text_field :cpf, { class: 'form-control', alt: :cpf } %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :email %>
+            <%= f.text_field :email, { class: 'form-control', maxlength: 50 } %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :gender_id %>
+            <%= f.collection_select :gender_id, Gender.order('value').all, :id, :value, { include_blank: true }, class: 'form-control' %>
+          </div>
+        </div>
+        <div class='col-lg-4'>
+          <div class='form-group'>
+            <%= f.label :birth %>
+            <%= f.text_field :birth, value: date_format(@person.try(:birth)), class: 'form-control', alt: :date %>
+          </div>
+        </div>
+        <div class='col-lg-3'>
+          <div class='form-group'>
+            <%= f.label :status %>
+            <div class='input-group'>
+              <span class='input-group-addon'>
+                <%= f.check_box :status, { checked: true } %>
+              </span>
+              <%= f.text_field :status, value: t(:productive_status), class: 'form-control', disabled: true %>
+            </div>
+          </div>
+        </div>
+        <div class='col-lg-12 text-right'>
+          <%= button_tag(type: 'submit', class: "btn btn-primary") do %>
+          <%= content_tag(:i, '', class:'fa fa-save') %>
+          <%= t(:save) %>
+          <%- end %> <%= link_to(content_tag(:i, '', class:'fa fa-caret-square-o-left') + ' ' + t(:back), productives_path, { class: 'btn btn-default' }) %>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :gender_id %><br>
-    <%= f.text_field :gender_id %>
-  </div>
-  <div class="field">
-    <%= f.label :cpf %><br>
-    <%= f.text_field :cpf %>
-  </div>
-  <div class="field">
-    <%= f.label :email %><br>
-    <%= f.text_field :email %>
-  </div>
-  <div class="field">
-    <%= f.label :birth %><br>
-    <%= f.date_select :birth %>
-  </div>
-  <div class="field">
-    <%= f.label :status %><br>
-    <%= f.check_box :status %>
-  </div>
-  <div class="actions">
-    <%= f.submit %>
-  </div>
+</div>
 <% end %>
